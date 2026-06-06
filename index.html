@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CS Learning Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#07070c;
+      --surface:#0f0f18;
+      --border:#1c1c2e;
+      --text:#e8e8f5;
+      --muted:#55556a;
+      --muted2:#8888a8;
+    }
+    html,body{
+      background:var(--bg);color:var(--text);
+      font-family:'IBM Plex Sans',sans-serif;
+      min-height:100vh;
+    }
+
+    /* grid background */
+    body::before{
+      content:'';position:fixed;inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+      background-size:48px 48px;
+      pointer-events:none;z-index:0;
+    }
+
+    .wrap{
+      position:relative;z-index:1;
+      max-width:1100px;margin:0 auto;
+      padding:80px 32px 80px;
+    }
+
+    /* HERO */
+    .hero{text-align:center;margin-bottom:80px;}
+    .hero-eyebrow{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px;letter-spacing:4px;text-transform:uppercase;
+      color:#5577ff;margin-bottom:20px;
+    }
+    .hero h1{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(56px,9vw,108px);
+      letter-spacing:4px;line-height:.92;
+      background:linear-gradient(135deg,#fff 20%,#8899ff 60%,#cc88ff);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      margin-bottom:24px;
+    }
+    .hero p{
+      font-size:18px;color:var(--muted2);
+      font-weight:300;max-width:520px;
+      margin:0 auto;line-height:1.7;
+    }
+
+    /* CARDS GRID */
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      gap:20px;
+    }
+
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:32px 28px;
+      text-decoration:none;color:inherit;
+      display:flex;flex-direction:column;gap:16px;
+      transition:all .25s;
+      position:relative;overflow:hidden;
+    }
+    .card::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(circle at 80% 20%,var(--accent-glow,rgba(85,119,255,.08)) 0%,transparent 60%);
+      pointer-events:none;transition:opacity .3s;opacity:0;
+    }
+    .card:hover{
+      border-color:var(--accent,#5577ff);
+      transform:translateY(-4px);
+      box-shadow:0 16px 40px rgba(0,0,0,.4);
+    }
+    .card:hover::before{opacity:1;}
+
+    .card-badge{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px;letter-spacing:2px;text-transform:uppercase;
+      padding:4px 10px;border-radius:20px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--muted2);
+      display:inline-block;width:fit-content;
+    }
+
+    .card-icon{font-size:36px;margin-bottom:4px;}
+
+    .card h2{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:28px;letter-spacing:1.5px;
+      color:var(--text);line-height:1.1;
+    }
+
+    .card p{
+      font-size:14px;color:var(--muted2);
+      line-height:1.7;font-weight:300;flex:1;
+    }
+
+    .card-features{
+      display:flex;flex-wrap:wrap;gap:6px;
+      margin-top:4px;
+    }
+    .feat-tag{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px;padding:3px 9px;
+      border-radius:4px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      color:var(--muted2);
+    }
+
+    .card-cta{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:8px;
+      padding-top:16px;
+      border-top:1px solid var(--border);
+    }
+    .card-cta span{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:12px;color:var(--accent,#5577ff);
+      font-weight:500;
+    }
+    .card-cta .arrow{
+      width:32px;height:32px;border-radius:50%;
+      border:1px solid var(--accent,#5577ff);
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;color:var(--accent,#5577ff);
+      transition:all .2s;
+    }
+    .card:hover .arrow{
+      background:var(--accent,#5577ff);color:#07070c;
+    }
+
+    /* specific card accent colors */
+    .card-sort{ --accent:#f0c040; --accent-glow:rgba(240,192,64,.08); }
+    .card-ds{   --accent:#00e5a0; --accent-glow:rgba(0,229,160,.08);  }
+    .card-book{ --accent:#bf7fff; --accent-glow:rgba(191,127,255,.08);}
+
+    /* FOOTER */
+    .footer{
+      text-align:center;margin-top:80px;
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px;color:var(--muted);
+      letter-spacing:1px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-eyebrow">Interactive Learning Tools</div>
+    <h1>CS<br>LEARNING<br>HUB</h1>
+    <p>Step-by-step visualizations of algorithms and data structures. Built for learners who learn by <em>seeing</em>.</p>
+  </div>
+
+  <div class="cards">
+
+    <!-- Sort Lab -->
+    <a href="sort-lab.html" class="card card-sort">
+      <div class="card-badge">Tool</div>
+      <div class="card-icon">⬆</div>
+      <h2>Sort Lab</h2>
+      <p>Live simulation of 8 sorting algorithms with animated bar charts, step-by-step explanations, real-time comparison and swap counters.</p>
+      <div class="card-features">
+        <span class="feat-tag">Bubble Sort</span>
+        <span class="feat-tag">Merge Sort</span>
+        <span class="feat-tag">Quick Sort</span>
+        <span class="feat-tag">Heap Sort</span>
+        <span class="feat-tag">+ 4 more</span>
+      </div>
+      <div class="card-cta">
+        <span>Open Simulator →</span>
+        <div class="arrow">→</div>
+      </div>
+    </a>
+
+    <!-- DS Book v1.0 -->
+    <a href="ds-book-v1.html" class="card card-ds">
+      <div class="card-badge">Book · v1.0</div>
+      <div class="card-icon">📐</div>
+      <h2>Data Structures Book</h2>
+      <p>10 illustrated chapters covering Arrays, Linked Lists, Stacks, Queues, Hash Tables, BSTs, Heaps, Graphs, and Sorting — each with interactive step-by-step visualizations.</p>
+      <div class="card-features">
+        <span class="feat-tag">10 Chapters</span>
+        <span class="feat-tag">Animated SVG</span>
+        <span class="feat-tag">Big-O Reference</span>
+      </div>
+      <div class="card-cta">
+        <span>Read Book →</span>
+        <div class="arrow">→</div>
+      </div>
+    </a>
+
+    <!-- Combined Book v1.01 -->
+    <a href="ds-book-v1.01.html" class="card card-book">
+      <div class="card-badge">Book · v1.01 — Latest</div>
+      <div class="card-icon">📖</div>
+      <h2>The Complete Coding Book</h2>
+      <p>The full learning path — from first principles to OOP to Data Structures. Variables, operators, control flow, functions, classes, encapsulation, inheritance, polymorphism, abstraction, SOLID, and all data structures.</p>
+      <div class="card-features">
+        <span class="feat-tag">14 Chapters</span>
+        <span class="feat-tag">OOP Visualized</span>
+        <span class="feat-tag">Prog. Fundamentals</span>
+        <span class="feat-tag">Progress Tracker</span>
+      </div>
+      <div class="card-cta">
+        <span>Start Learning →</span>
+        <div class="arrow">→</div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="footer">
+    <p>Built with React · No build step required · Works on GitHub Pages</p>
+  </div>
+</div>
+</body>
+</html>

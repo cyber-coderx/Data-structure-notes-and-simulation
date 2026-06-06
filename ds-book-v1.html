@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Structures — Interactive Visual Book</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{background:#0a0a0f}</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+
+// ============================================================
+// THEME & GLOBAL STYLES
+// ============================================================
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #7c6af7;
+    --accent2: #f76c6c;
+    --accent3: #6cf7c5;
+    --accent4: #f7c96c;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --node-bg: #1e1e2e;
+    --node-border: #7c6af7;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; }
+
+  .book-container {
+    display: flex;
+    min-height: 100vh;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 24px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .chapter-group { margin-bottom: 8px; }
+
+  .chapter-group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 4px 20px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.2s;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+  }
+
+  .nav-item:hover { color: var(--text); background: rgba(124,106,247,0.06); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(124,106,247,0.1); }
+
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .chapter-hero {
+    padding: 60px 60px 40px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,106,247,0.05) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chapter-hero::before {
+    content: attr(data-number);
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 120px;
+    font-weight: 700;
+    color: rgba(124,106,247,0.06);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .chapter-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .chapter-title {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .chapter-desc {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  .chapter-body { padding: 40px 60px; }
+
+  .section { margin-bottom: 60px; }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 22px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .prose {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #c0c0d8;
+    margin-bottom: 20px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 400;
+  }
+
+  /* Viz container */
+  .viz-container {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 24px 0;
+    position: relative;
+  }
+
+  .viz-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .viz-title::before {
+    content: '▶';
+    color: var(--accent3);
+    font-size: 9px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #9585f9; border-color: #9585f9; color: white; }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .step-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent3);
+    padding: 8px 14px;
+    background: rgba(108,247,197,0.08);
+    border: 1px solid rgba(108,247,197,0.2);
+    border-radius: 6px;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+
+  /* Step dots */
+  .step-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+  }
+
+  .step-dot.active { background: var(--accent); transform: scale(1.3); }
+  .step-dot.done { background: var(--accent3); }
+
+  /* SVG nodes */
+  .node {
+    transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  /* Code block */
+  .code-block {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+
+  .code-block .kw { color: #c792ea; }
+  .code-block .fn { color: #82aaff; }
+  .code-block .str { color: #c3e88d; }
+  .code-block .num { color: #f78c6c; }
+  .code-block .cm { color: #546e7a; font-style: italic; }
+  .code-block .cls { color: var(--accent4); }
+
+  /* Complexity table */
+  .complexity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+
+  .complexity-table th {
+    padding: 10px 16px;
+    text-align: left;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .complexity-table td {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .complexity-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  .badge-green { background: rgba(108,247,197,0.15); color: var(--accent3); border: 1px solid rgba(108,247,197,0.3); }
+  .badge-yellow { background: rgba(247,201,108,0.15); color: var(--accent4); border: 1px solid rgba(247,201,108,0.3); }
+  .badge-red { background: rgba(247,108,108,0.15); color: var(--accent2); border: 1px solid rgba(247,108,108,0.3); }
+
+  /* Memory diagram */
+  .memory-cell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid var(--border);
+    min-width: 56px;
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .memory-cell .addr {
+    font-size: 9px;
+    color: var(--muted);
+    background: var(--surface);
+    width: 100%;
+    text-align: center;
+    padding: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .memory-cell .val {
+    font-size: 14px;
+    padding: 8px 4px;
+    font-weight: 600;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Info card */
+  .info-card {
+    background: rgba(124,106,247,0.08);
+    border: 1px solid rgba(124,106,247,0.25);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c0c0d8;
+  }
+
+  .info-card strong { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .chapter-hero { padding: 40px 24px 32px; }
+    .chapter-hero::before { display: none; }
+    .chapter-body { padding: 24px; }
+    .chapter-title { font-size: 28px; }
+  }
+`;
+
+// ============================================================
+// CHAPTER DATA
+// ============================================================
+const chapters = [
+  { id: "intro", title: "Introduction", icon: "📖", group: "Foundations" },
+  { id: "arrays", title: "Arrays", icon: "▦", group: "Linear" },
+  { id: "linkedlist", title: "Linked Lists", icon: "⛓", group: "Linear" },
+  { id: "stack", title: "Stacks", icon: "🥞", group: "Linear" },
+  { id: "queue", title: "Queues", icon: "🚶", group: "Linear" },
+  { id: "hashtable", title: "Hash Tables", icon: "#", group: "Hash-Based" },
+  { id: "bst", title: "Binary Search Trees", icon: "🌲", group: "Trees" },
+  { id: "heap", title: "Heaps", icon: "⛰", group: "Trees" },
+  { id: "graph", title: "Graphs", icon: "🕸", group: "Graphs" },
+  { id: "sorting", title: "Sorting Algorithms", icon: "⬆", group: "Algorithms" },
+];
+
+// ============================================================
+// UTILITY
+// ============================================================
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// ============================================================
+// VISUALIZATIONS
+// ============================================================
+
+// --- Array Viz ---
+function ArrayViz() {
+  const initialArr = [15, 8, 42, 3, 27, 11, 36, 19];
+  const steps = [
+    { arr: initialArr, highlight: [], msg: "Initial array in memory — elements stored in contiguous cells." },
+    { arr: initialArr, highlight: [0], msg: "Access arr[0] = 15. O(1) — direct index calculation: base_addr + 0×4 bytes." },
+    { arr: initialArr, highlight: [4], msg: "Access arr[4] = 27. O(1) — no traversal needed, just base_addr + 4×4." },
+    { arr: [...initialArr.slice(0,2), 99, ...initialArr.slice(3)], highlight: [2], msg: "Update arr[2] = 99. O(1) write directly to address." },
+    { arr: [99, ...initialArr.slice(0,2), 99, ...initialArr.slice(3)], highlight: [0,1,2,3,4,5,6,7,8], msg: "Insert at front: all elements shift right. O(n) — expensive!" },
+    { arr: [...initialArr.slice(0,2), 99, ...initialArr.slice(3), 55], highlight: [8], msg: "Append to end: O(1) — just write to next free slot." },
+  ];
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+
+  const colors = ["#7c6af7","#f76c6c","#6cf7c5","#f7c96c","#f76c9c","#6cc5f7","#c56cf7","#f7a96c","#6cf776"];
+
+  return (
+    <div>
+      <div style={{ overflowX: "auto", paddingBottom: 8 }}>
+        <svg width={Math.max(600, cur.arr.length * 72)} height={160} style={{ display: "block" }}>
+          {/* Memory address bar */}
+          {cur.arr.map((val, i) => (
+            <g key={i} className="node">
+              <rect x={i * 70 + 10} y={20} width={58} height={14} rx={3}
+                fill="rgba(0,0,0,0.3)" stroke="#2a2a3e" strokeWidth={1} />
+              <text x={i * 70 + 39} y={31} textAnchor="middle" fontSize={9}
+                fill="#6b6b85" fontFamily="JetBrains Mono">0x{(0x1000 + i * 4).toString(16)}</text>
+            </g>
+          ))}
+          {cur.arr.map((val, i) => {
+            const highlighted = cur.highlight.includes(i);
+            return (
+              <g key={i} className="node" style={{ transition: "all 0.4s" }}>
+                <rect x={i * 70 + 10} y={40} width={58} height={60} rx={6}
+                  fill={highlighted ? "rgba(124,106,247,0.25)" : "var(--node-bg)"}
+                  stroke={highlighted ? "#7c6af7" : "#2a2a3e"}
+                  strokeWidth={highlighted ? 2 : 1} />
+                <text x={i * 70 + 39} y={78} textAnchor="middle" fontSize={22}
+                  fill={highlighted ? "#7c6af7" : "#e8e8f0"} fontWeight="700"
+                  fontFamily="JetBrains Mono">{val}</text>
+                <text x={i * 70 + 39} y={115} textAnchor="middle" fontSize={10}
+                  fill="#6b6b85" fontFamily="JetBrains Mono">[{i}]</text>
+              </g>
+            );
+          })}
+          {/* Index pointer */}
+          {cur.highlight.map(i => (
+            <g key={`ptr-${i}`}>
+              <line x1={i * 70 + 39} y1={135} x2={i * 70 + 39} y2={108}
+                stroke="#7c6af7" strokeWidth={1.5} strokeDasharray="3,2" />
+              <polygon points={`${i*70+39},106 ${i*70+35},113 ${i*70+43},113`} fill="#7c6af7" />
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>Step {step + 1}/{steps.length}</span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_, i) => (
+          <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`}
+            onClick={() => setStep(i)} style={{ cursor: "pointer" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Linked List Viz ---
+function LinkedListViz() {
+  const steps = [
+    { nodes: [{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:-1, action:"empty", msg:"A linked list: each node holds a value and a pointer to the next node. No contiguous memory required!" },
+    { nodes: [{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:0, action:"traverse", msg:"Traversal starts at HEAD (node 0). We follow pointers one by one." },
+    { nodes: [{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:1, action:"traverse", msg:"Follow pointer → node 1 (value 20). O(n) traversal." },
+    { nodes: [{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:2, action:"traverse", msg:"Follow pointer → node 2 (value 30)." },
+    { nodes: [{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:3, action:"traverse", msg:"Reached node 3 (value 40). next = null → END of list." },
+    { nodes: [{v:5,next:0},{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:0, action:"insert", insertIdx:0, msg:"Prepend 5: create new node, set its next to old HEAD. O(1)!" },
+    { nodes: [{v:5,next:0},{v:10,next:5},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:5, action:"insert", insertIdx:2, msg:"Insert 25 after node 1: update prev.next and new.next. O(n) to find position, O(1) to insert." },
+    { nodes: [{v:5,next:0},{v:10,next:2},{v:20,next:2},{v:30,next:3},{v:40,next:-1}], active:1, action:"delete", msg:"Delete node 1 (10): re-link predecessor's next pointer. Node memory freed. O(1) once found." },
+  ];
+
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+  const nodeWidth = 80, nodeHeight = 50, gap = 40;
+  const displayNodes = [{v:10,next:1},{v:20,next:2},{v:30,next:3},{v:40,next:-1}];
+  // Use a simplified 4-node display
+  const vizNodes = [
+    {v:10,color:"#7c6af7"},{v:20,color:"#6cf7c5"},{v:30,color:"#f7c96c"},{v:40,color:"#f76c6c"}
+  ];
+  const totalW = vizNodes.length * (nodeWidth + gap) - gap;
+
+  return (
+    <div>
+      <svg width={Math.max(500, totalW + 80)} height={180} style={{ display: "block" }}>
+        {/* HEAD label */}
+        <text x={10} y={65} fontSize={11} fill="#7c6af7" fontFamily="JetBrains Mono">HEAD</text>
+        <line x1={48} y1={62} x2={64} y2={62} stroke="#7c6af7" strokeWidth={1.5} markerEnd="url(#arr)" />
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#7c6af7" />
+          </marker>
+          <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#6cf7c5" />
+          </marker>
+        </defs>
+        {vizNodes.map((n, i) => {
+          const x = 70 + i * (nodeWidth + gap);
+          const isActive = i === cur.active;
+          return (
+            <g key={i}>
+              {/* Node box */}
+              <rect x={x} y={36} width={nodeWidth} height={nodeHeight} rx={8}
+                fill={isActive ? `${n.color}22` : "var(--node-bg)"}
+                stroke={isActive ? n.color : "#2a2a3e"} strokeWidth={isActive ? 2.5 : 1} />
+              {/* Value */}
+              <rect x={x} y={36} width={nodeWidth - 24} height={nodeHeight} rx={8}
+                fill="transparent" stroke="none" />
+              <text x={x + (nodeWidth - 24) / 2} y={67} textAnchor="middle"
+                fontSize={20} fontWeight="700" fontFamily="JetBrains Mono"
+                fill={isActive ? n.color : "#e8e8f0"}>{n.v}</text>
+              {/* Next pointer box */}
+              <rect x={x + nodeWidth - 22} y={36} width={22} height={nodeHeight} rx={0}
+                fill="rgba(0,0,0,0.3)" stroke="#2a2a3e" strokeWidth={1} />
+              <text x={x + nodeWidth - 11} y={65} textAnchor="middle"
+                fontSize={9} fill="#6b6b85" fontFamily="JetBrains Mono">
+                {i < vizNodes.length - 1 ? "→" : "∅"}
+              </text>
+              {/* Index label */}
+              <text x={x + nodeWidth / 2 - 12} y={100} textAnchor="middle"
+                fontSize={10} fill="#6b6b85" fontFamily="JetBrains Mono">node[{i}]</text>
+              {/* Arrow to next */}
+              {i < vizNodes.length - 1 && (
+                <path d={`M ${x + nodeWidth} ${61} L ${x + nodeWidth + gap} ${61}`}
+                  stroke="#2a2a3e" strokeWidth={1.5} markerEnd="url(#arr)" fill="none" />
+              )}
+              {/* NULL label */}
+              {i === vizNodes.length - 1 && (
+                <text x={x + nodeWidth + 8} y={65} fontSize={11} fill="#6b6b85" fontFamily="JetBrains Mono">NULL</text>
+              )}
+            </g>
+          );
+        })}
+        {/* Active step indicator arrow */}
+        {cur.active >= 0 && (
+          <g>
+            <polygon points={`${70 + cur.active*(nodeWidth+gap)+nodeWidth/2-12},28 ${70+cur.active*(nodeWidth+gap)+nodeWidth/2-8},21 ${70+cur.active*(nodeWidth+gap)+nodeWidth/2+8},21 ${70+cur.active*(nodeWidth+gap)+nodeWidth/2+12},28`}
+              fill={vizNodes[cur.active % 4].color} opacity={0.7} />
+          </g>
+        )}
+        {/* Memory layout note */}
+        <text x={70} y={130} fontSize={10} fill="#6b6b85" fontFamily="JetBrains Mono">Memory: non-contiguous — nodes can be anywhere in RAM</text>
+        <rect x={70} y={140} width={40} height={14} rx={2} fill="#1a1a26" stroke="#2a2a3e" />
+        <text x={90} y={150} textAnchor="middle" fontSize={9} fill="#7c6af7" fontFamily="JetBrains Mono">0x104</text>
+        <rect x={200} y={140} width={40} height={14} rx={2} fill="#1a1a26" stroke="#2a2a3e" />
+        <text x={220} y={150} textAnchor="middle" fontSize={9} fill="#6cf7c5" fontFamily="JetBrains Mono">0x2F8</text>
+        <rect x={340} y={140} width={40} height={14} rx={2} fill="#1a1a26" stroke="#2a2a3e" />
+        <text x={360} y={150} textAnchor="middle" fontSize={9} fill="#f7c96c" fontFamily="JetBrains Mono">0x5A2</text>
+        <line x1={110} y1={147} x2={200} y2={147} stroke="#2a2a3e" strokeWidth={1} strokeDasharray="4,3" />
+        <line x1={240} y1={147} x2={340} y2={147} stroke="#2a2a3e" strokeWidth={1} strokeDasharray="4,3" />
+      </svg>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s-1))} disabled={step===0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length-1, s+1))} disabled={step===steps.length-1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:"var(--muted)",marginLeft:8}}>Step {step+1}/{steps.length}</span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_,i) => <div key={i} className={`step-dot ${i===step?"active":i<step?"done":""}`} onClick={()=>setStep(i)} style={{cursor:"pointer"}} />)}
+      </div>
+    </div>
+  );
+}
+
+// --- Stack Viz ---
+function StackViz() {
+  const steps = [
+    { stack: [], op: "", msg: "Empty stack. A stack follows LIFO — Last In, First Out. Think: a stack of plates." },
+    { stack: [10], op: "push", msg: "PUSH 10 → top of stack. O(1)." },
+    { stack: [10, 25], op: "push", msg: "PUSH 25 → stacked on top of 10. O(1)." },
+    { stack: [10, 25, 7], op: "push", msg: "PUSH 7 → now the top element. O(1)." },
+    { stack: [10, 25, 7, 43], op: "push", msg: "PUSH 43 → top is now 43. Stack grows upward." },
+    { stack: [10, 25, 7], op: "pop", popped: 43, msg: "POP → removes and returns 43 (top). O(1)." },
+    { stack: [10, 25], op: "pop", popped: 7, msg: "POP → removes and returns 7. O(1)." },
+    { stack: [10, 25], op: "peek", msg: "PEEK → read top (25) without removing. O(1)." },
+  ];
+
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+  const maxH = 5;
+  const svgH = 280;
+  const cellH = 44, cellW = 120, x0 = 60;
+
+  return (
+    <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+      <div style={{ flex: "0 0 auto" }}>
+        <svg width={260} height={svgH} style={{ display: "block" }}>
+          {/* Stack frame */}
+          <rect x={x0} y={20} width={cellW} height={maxH * cellH + 10} rx={4}
+            fill="transparent" stroke="#2a2a3e" strokeWidth={1} strokeDasharray="4,3" />
+          <text x={x0 + cellW / 2} y={15} textAnchor="middle" fontSize={10}
+            fill="#6b6b85" fontFamily="JetBrains Mono">STACK MEMORY</text>
+
+          {/* Empty slots */}
+          {Array.from({ length: maxH }).map((_, i) => (
+            <rect key={i} x={x0 + 2} y={25 + i * cellH} width={cellW - 4} height={cellH - 4} rx={4}
+              fill="rgba(0,0,0,0.2)" stroke="#1a1a26" strokeWidth={1} />
+          ))}
+
+          {/* Filled slots */}
+          {cur.stack.map((val, i) => {
+            const stackPos = cur.stack.length - 1 - i; // 0=bottom
+            const y = 25 + (maxH - 1 - i) * cellH;
+            const isTop = i === cur.stack.length - 1;
+            const color = isTop && cur.op === "peek" ? "#f7c96c" : isTop ? "#7c6af7" : "#4a4a6a";
+            return (
+              <g key={i} style={{ transition: "all 0.4s" }}>
+                <rect x={x0 + 2} y={y} width={cellW - 4} height={cellH - 4} rx={4}
+                  fill={`${color}22`} stroke={color} strokeWidth={isTop ? 2 : 1} />
+                <text x={x0 + cellW / 2} y={y + 28} textAnchor="middle"
+                  fontSize={18} fontWeight="700" fill={isTop ? color : "#c0c0d8"}
+                  fontFamily="JetBrains Mono">{val}</text>
+              </g>
+            );
+          })}
+
+          {/* TOP pointer */}
+          {cur.stack.length > 0 && (
+            <g>
+              <text x={x0 + cellW + 12} y={25 + (maxH - cur.stack.length) * cellH + 26}
+                fontSize={11} fill="#7c6af7" fontFamily="JetBrains Mono">← TOP</text>
+            </g>
+          )}
+
+          {/* BOTTOM label */}
+          <text x={x0 + cellW + 12} y={25 + (maxH - 1) * cellH + 26}
+            fontSize={11} fill="#6b6b85" fontFamily="JetBrains Mono">← BOTTOM</text>
+
+          {/* Pop animation */}
+          {cur.op === "pop" && (
+            <g>
+              <rect x={x0 + 2} y={-10} width={cellW - 4} height={cellH - 4} rx={4}
+                fill="rgba(247,108,108,0.2)" stroke="#f76c6c" strokeWidth={2} />
+              <text x={x0 + cellW / 2} y={18} textAnchor="middle"
+                fontSize={18} fontWeight="700" fill="#f76c6c" fontFamily="JetBrains Mono">{cur.popped}</text>
+              <text x={x0 + cellW / 2} y={-16} textAnchor="middle"
+                fontSize={10} fill="#f76c6c" fontFamily="JetBrains Mono">POPPED ↑</text>
+            </g>
+          )}
+        </svg>
+      </div>
+      <div style={{ flex: 1, minWidth: 200 }}>
+        <div className="step-info">{cur.msg}</div>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>
+            OPERATION LOG
+          </div>
+          {steps.slice(0, step + 1).filter(s => s.op).map((s, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span className={`badge ${s.op === "pop" ? "badge-red" : s.op === "peek" ? "badge-yellow" : "badge-green"}`}>
+                {s.op.toUpperCase()}
+              </span>
+              <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "#c0c0d8" }}>
+                {s.op === "pop" ? `returns ${s.popped}` : s.op === "peek" ? `reads ${s.stack[s.stack.length - 1]}` : `value ${s.stack[s.stack.length - 1]}`}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="controls" style={{ marginTop: 20 }}>
+          <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+          <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+          <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        </div>
+        <div className="step-dots" style={{ marginTop: 12 }}>
+          {steps.map((_, i) => <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`} onClick={() => setStep(i)} style={{ cursor: "pointer" }} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Queue Viz ---
+function QueueViz() {
+  const steps = [
+    { q: [], op: "", msg: "Empty queue. FIFO — First In, First Out. Think: a line at a coffee shop." },
+    { q: ["Alice"], op: "enqueue", msg: "ENQUEUE Alice — joins at the REAR. O(1)." },
+    { q: ["Alice", "Bob"], op: "enqueue", msg: "ENQUEUE Bob — joins behind Alice. O(1)." },
+    { q: ["Alice", "Bob", "Carol"], op: "enqueue", msg: "ENQUEUE Carol — now 3 people waiting. O(1)." },
+    { q: ["Alice", "Bob", "Carol", "Dave"], op: "enqueue", msg: "ENQUEUE Dave — rear of the queue. O(1)." },
+    { q: ["Bob", "Carol", "Dave"], op: "dequeue", dequeued: "Alice", msg: "DEQUEUE → Alice served first (was at FRONT). O(1)." },
+    { q: ["Carol", "Dave"], op: "dequeue", dequeued: "Bob", msg: "DEQUEUE → Bob leaves the front. O(1)." },
+    { q: ["Carol", "Dave"], op: "peek", msg: "PEEK FRONT → Carol, but she stays in queue. O(1)." },
+  ];
+
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+
+  const colors = { "Alice": "#7c6af7", "Bob": "#6cf7c5", "Carol": "#f7c96c", "Dave": "#f76c6c" };
+  const cellW = 80, cellH = 52, gap = 6;
+  const totalW = Math.max(4, cur.q.length) * (cellW + gap);
+
+  return (
+    <div>
+      <svg width={Math.max(500, totalW + 160)} height={160} style={{ display: "block" }}>
+        {/* Labels */}
+        {cur.q.length > 0 && (
+          <>
+            <text x={80} y={30} textAnchor="middle" fontSize={10} fill="#6cf7c5" fontFamily="JetBrains Mono">FRONT</text>
+            <line x1={80} y1={34} x2={80} y2={42} stroke="#6cf7c5" strokeWidth={1.5} />
+            <text x={80 + (cur.q.length - 1) * (cellW + gap)} y={30} textAnchor="middle" fontSize={10} fill="#f76c6c" fontFamily="JetBrains Mono">REAR</text>
+            <line x1={80 + (cur.q.length - 1) * (cellW + gap)} y1={34} x2={80 + (cur.q.length - 1) * (cellW + gap)} y2={42} stroke="#f76c6c" strokeWidth={1.5} />
+          </>
+        )}
+
+        {/* Flow arrow */}
+        <text x={20} y={76} fontSize={22} fill="#2a2a3e">→</text>
+
+        {/* Dequeue side */}
+        {cur.op === "dequeue" && (
+          <g>
+            <rect x={-60} y={44} width={cellW} height={cellH} rx={8}
+              fill="rgba(247,108,108,0.15)" stroke="#f76c6c" strokeWidth={2} />
+            <text x={-60 + cellW / 2} y={76} textAnchor="middle" fontSize={13} fontWeight="700"
+              fill="#f76c6c" fontFamily="JetBrains Mono">{cur.dequeued}</text>
+            <text x={-60 + cellW / 2} y={95} textAnchor="middle" fontSize={9} fill="#f76c6c" fontFamily="JetBrains Mono">served ✓</text>
+          </g>
+        )}
+
+        {cur.q.map((name, i) => {
+          const x = 50 + i * (cellW + gap);
+          const col = colors[name] || "#7c6af7";
+          const isFront = i === 0;
+          const isRear = i === cur.q.length - 1;
+          const isPeek = cur.op === "peek" && isFront;
+          return (
+            <g key={name}>
+              <rect x={x} y={44} width={cellW} height={cellH} rx={8}
+                fill={`${col}${isPeek ? "33" : "18"}`}
+                stroke={col} strokeWidth={isPeek ? 2.5 : 1.5} />
+              <text x={x + cellW / 2} y={76} textAnchor="middle" fontSize={13} fontWeight="700"
+                fill={col} fontFamily="JetBrains Mono">{name}</text>
+              {isPeek && <text x={x + cellW / 2} y={92} textAnchor="middle" fontSize={9} fill={col} fontFamily="JetBrains Mono">PEEK ↑</text>}
+            </g>
+          );
+        })}
+
+        {/* Enqueue arrow */}
+        {cur.op === "enqueue" && cur.q.length > 0 && (
+          <g>
+            <text x={50 + cur.q.length * (cellW + gap) + 20} y={76} fontSize={11} fill="#7c6af7" fontFamily="JetBrains Mono">← IN</text>
+          </g>
+        )}
+
+        {/* Direction arrows */}
+        <text x={50 + Math.max(1, cur.q.length) * (cellW + gap) + 10} y={145}
+          fontSize={11} fill="#6b6b85" fontFamily="JetBrains Mono">enqueue →</text>
+        <text x={10} y={145} fontSize={11} fill="#6b6b85" fontFamily="JetBrains Mono">← dequeue</text>
+      </svg>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>Step {step + 1}/{steps.length}</span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_, i) => <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`} onClick={() => setStep(i)} style={{ cursor: "pointer" }} />)}
+      </div>
+    </div>
+  );
+}
+
+// --- Hash Table Viz ---
+function HashTableViz() {
+  const tableSize = 7;
+  const steps = [
+    { table: Array(tableSize).fill(null), highlight: -1, key: "", val: "", msg: "Empty hash table with 7 buckets. Hash function: h(k) = k % 7." },
+    { table: [null,null,null,null,{k:"apple",v:1.5},null,null], highlight: 4, key:"apple", val:"1.50", msg: "INSERT 'apple'→1.50. hash('apple')=4. Store at bucket 4." },
+    { table: [null,{k:"fig",v:0.8},null,null,{k:"apple",v:1.5},null,null], highlight: 1, key:"fig", val:"0.80", msg: "INSERT 'fig'→0.80. hash('fig')=1. Store at bucket 1." },
+    { table: [null,{k:"fig",v:0.8},null,null,{k:"apple",v:1.5},null,{k:"kiwi",v:2.1}], highlight: 6, key:"kiwi", val:"2.10", msg: "INSERT 'kiwi'→2.10. hash('kiwi')=6. Store at bucket 6." },
+    { table: [{k:"mango",v:3.2},{k:"fig",v:0.8},null,null,{k:"apple",v:1.5},null,{k:"kiwi",v:2.1}], highlight: 0, key:"mango", val:"3.20", msg: "INSERT 'mango'→3.20. hash('mango')=0." },
+    { table: [{k:"mango",v:3.2},{k:"fig",v:0.8},null,null,{k:"apple",v:1.5},null,{k:"kiwi",v:2.1}], highlight: 4, key:"apple", val:"LOOKUP", msg: "LOOKUP 'apple': compute hash(apple)=4, go directly to bucket 4. O(1)! Found 1.50." },
+    { table: [{k:"mango",v:3.2},{k:"fig",v:0.8},null,null,{k:"apple",v:1.5},{k:"grape",v:1.2},{k:"kiwi",v:2.1}], highlight: 5, key:"grape", val:"1.20", col:"#f76c6c", msg: "INSERT 'grape'. hash('grape')=5 (no collision). But if two keys hash to same bucket → collision! Resolved via chaining or open addressing." },
+  ];
+
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+
+  return (
+    <div>
+      <svg width={520} height={310} style={{ display: "block" }}>
+        {/* Hash function box */}
+        <rect x={200} y={8} width={120} height={28} rx={6}
+          fill="rgba(124,106,247,0.15)" stroke="#7c6af7" strokeWidth={1} />
+        <text x={260} y={27} textAnchor="middle" fontSize={12} fill="#7c6af7"
+          fontFamily="JetBrains Mono">h(k) = k % 7</text>
+
+        {/* Buckets */}
+        {cur.table.map((entry, i) => {
+          const y = 50 + i * 36;
+          const isHighlight = i === cur.highlight;
+          const color = isHighlight ? (cur.col || "#7c6af7") : (entry ? "#4a4a7a" : "#2a2a3e");
+          return (
+            <g key={i}>
+              {/* Index */}
+              <text x={155} y={y + 22} textAnchor="middle" fontSize={12} fill="#6b6b85"
+                fontFamily="JetBrains Mono">[{i}]</text>
+              {/* Bucket */}
+              <rect x={170} y={y + 4} width={280} height={28} rx={5}
+                fill={isHighlight ? `${cur.col || "#7c6af7"}18` : "var(--node-bg)"}
+                stroke={color} strokeWidth={isHighlight ? 2 : 1} />
+              {/* Content */}
+              {entry ? (
+                <>
+                  <text x={185} y={y + 23} fontSize={13} fontWeight="600"
+                    fill={isHighlight ? (cur.col || "#7c6af7") : "#c0c0d8"}
+                    fontFamily="JetBrains Mono">"{entry.k}"</text>
+                  <text x={340} y={y + 23} fontSize={13} fontWeight="600"
+                    fill={isHighlight ? (cur.col || "#7c6af7") : "#e8e8f0"}
+                    fontFamily="JetBrains Mono">→ {entry.v}</text>
+                </>
+              ) : (
+                <text x={310} y={y + 23} textAnchor="middle" fontSize={11} fill="#3a3a5a"
+                  fontFamily="JetBrains Mono">empty</text>
+              )}
+              {/* Highlight marker */}
+              {isHighlight && (
+                <g>
+                  <polygon points={`462,${y+12} 470,${y+18} 462,${y+24}`} fill={cur.col || "#7c6af7"} />
+                  <text x={476} y={y+22} fontSize={10} fill={cur.col || "#7c6af7"} fontFamily="JetBrains Mono">
+                    {cur.val === "LOOKUP" ? "FOUND" : "← new"}
+                  </text>
+                </g>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>Step {step + 1}/{steps.length}</span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_, i) => <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`} onClick={() => setStep(i)} style={{ cursor: "pointer" }} />)}
+      </div>
+    </div>
+  );
+}
+
+// --- BST Viz ---
+function BSTViz() {
+  // node positions (id, val, x, y, parent, left, right)
+  const allNodes = {
+    50: { val: 50, x: 250, y: 40, left: 30, right: 70 },
+    30: { val: 30, x: 140, y: 120, left: 20, right: 40 },
+    70: { val: 70, x: 360, y: 120, left: 60, right: 80 },
+    20: { val: 20, x: 80, y: 200, left: null, right: null },
+    40: { val: 40, x: 200, y: 200, left: null, right: null },
+    60: { val: 60, x: 300, y: 200, left: null, right: null },
+    80: { val: 80, x: 420, y: 200, left: null, right: null },
+  };
+
+  const steps = [
+    { visible: [50], highlight: [], path: [], msg: "Insert 50 — becomes the root. Every BST starts with a root." },
+    { visible: [50, 30], highlight: [30], path: [50, 30], msg: "Insert 30. 30 < 50 → go LEFT of root. Place as left child." },
+    { visible: [50, 30, 70], highlight: [70], path: [50, 70], msg: "Insert 70. 70 > 50 → go RIGHT of root. Place as right child." },
+    { visible: [50, 30, 70, 20], highlight: [20], path: [50, 30, 20], msg: "Insert 20. 20<50→left, 20<30→left. Placed as left child of 30." },
+    { visible: [50, 30, 70, 20, 40], highlight: [40], path: [50, 30, 40], msg: "Insert 40. 40<50→left, 40>30→right. Placed as right child of 30." },
+    { visible: [50, 30, 70, 20, 40, 60], highlight: [60], path: [50, 70, 60], msg: "Insert 60. 60>50→right, 60<70→left." },
+    { visible: [50, 30, 70, 20, 40, 60, 80], highlight: [80], path: [50, 70, 80], msg: "Insert 80. 80>50→right, 80>70→right. Tree complete!" },
+    { visible: [50, 30, 70, 20, 40, 60, 80], highlight: [50, 70, 60], path: [50, 70, 60], searchFor: 60, msg: "SEARCH 60: 60>50→go right (70), 60<70→go left (60). Found in 2 comparisons! O(log n)." },
+    { visible: [50, 30, 70, 20, 40, 60, 80], highlight: [], path: [], inorder: [20, 30, 40, 50, 60, 70, 80], msg: "IN-ORDER traversal (Left→Root→Right): 20,30,40,50,60,70,80. BST gives sorted output!" },
+  ];
+
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+
+  const edges = [
+    [50, 30], [50, 70], [30, 20], [30, 40], [70, 60], [70, 80]
+  ];
+
+  return (
+    <div>
+      <svg width={520} height={280} style={{ display: "block" }}>
+        <defs>
+          <marker id="bst-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#2a2a3e" />
+          </marker>
+        </defs>
+        {/* Edges */}
+        {edges.map(([from, to]) => {
+          if (!cur.visible.includes(from) || !cur.visible.includes(to)) return null;
+          const f = allNodes[from], t = allNodes[to];
+          const isPath = cur.path.includes(from) && cur.path.includes(to);
+          return (
+            <line key={`${from}-${to}`}
+              x1={f.x} y1={f.y + 20} x2={t.x} y2={t.y - 20}
+              stroke={isPath ? "#7c6af7" : "#2a2a3e"}
+              strokeWidth={isPath ? 2.5 : 1.5} />
+          );
+        })}
+        {/* Nodes */}
+        {cur.visible.map(id => {
+          const n = allNodes[id];
+          const isH = cur.highlight.includes(id);
+          const isPath = cur.path.includes(id) && !isH;
+          return (
+            <g key={id}>
+              <circle cx={n.x} cy={n.y} r={22}
+                fill={isH ? "rgba(124,106,247,0.3)" : isPath ? "rgba(108,247,197,0.15)" : "var(--node-bg)"}
+                stroke={isH ? "#7c6af7" : isPath ? "#6cf7c5" : "#3a3a5e"}
+                strokeWidth={isH ? 2.5 : 1.5} />
+              <text x={n.x} y={n.y + 6} textAnchor="middle" fontSize={15} fontWeight="700"
+                fill={isH ? "#7c6af7" : isPath ? "#6cf7c5" : "#e8e8f0"}
+                fontFamily="JetBrains Mono">{n.val}</text>
+            </g>
+          );
+        })}
+        {/* Left/Right labels */}
+        <text x={185} y={85} fontSize={10} fill="#6b6b85" fontFamily="JetBrains Mono" transform="rotate(-30,185,85)">L &lt;50</text>
+        <text x={305} y={85} fontSize={10} fill="#6b6b85" fontFamily="JetBrains Mono" transform="rotate(30,305,85)">R &gt;50</text>
+        {/* Inorder display */}
+        {cur.inorder && (
+          <g>
+            <text x={30} y={255} fontSize={11} fill="#f7c96c" fontFamily="JetBrains Mono">IN-ORDER: </text>
+            {cur.inorder.map((v, i) => (
+              <g key={i}>
+                <rect x={120 + i * 48} y={240} width={40} height={24} rx={4}
+                  fill="rgba(247,201,108,0.15)" stroke="#f7c96c" strokeWidth={1} />
+                <text x={140 + i * 48} y={257} textAnchor="middle" fontSize={12} fill="#f7c96c" fontFamily="JetBrains Mono">{v}</text>
+              </g>
+            ))}
+          </g>
+        )}
+      </svg>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>Step {step + 1}/{steps.length}</span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_, i) => <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`} onClick={() => setStep(i)} style={{ cursor: "pointer" }} />)}
+      </div>
+    </div>
+  );
+}
+
+// --- Heap Viz ---
+function HeapViz() {
+  const pos = [
+    null,
+    {x:250,y:40},{x:150,y:120},{x:350,y:120},{x:90,y:200},{x:210,y:200},{x:290,y:200},{x:410,y:200}
+  ];
+  const steps = [
+    { heap:[100,90,80,60,70,50,75], hl:[], msg:"Max-Heap: parent ≥ children always. Root always holds the MAX. Array: [100,90,80,60,70,50,75]." },
+    { heap:[100,90,80,60,70,50,75], hl:[1], msg:"Root = 100. MAX element always at index 1. EXTRACT-MAX is O(log n)." },
+    { heap:[100,90,80,60,70,50,75], hl:[1,2], msg:"Children of node i are at 2i and 2i+1. Parent of i is at ⌊i/2⌋." },
+    { heap:[75,90,80,60,70,50,null], hl:[1,7], msg:"EXTRACT-MAX: swap root (100) with last element (75). Remove last." },
+    { heap:[75,90,80,60,70,50,null], hl:[1], msg:"Heap violated! 75 < 90 and 75 < 80. Must SIFT DOWN (heapify)." },
+    { heap:[90,75,80,60,70,50,null], hl:[1,2], msg:"SIFT DOWN: swap 75 with larger child (90). Heap property restored at level 1." },
+    { heap:[90,75,80,60,70,50,null], hl:[2,4,5], msg:"Check 75's children (60,70). 75>70>60. Heap property satisfied! Done." },
+    { heap:[110,90,80,60,70,50,75], hl:[7], msg:"INSERT 110: place at next available position (index 7). O(log n)." },
+    { heap:[110,90,80,60,70,50,75], hl:[7,3,1], msg:"SIFT UP: 110 > 80 → swap. 110 > 90 → swap again. Now at root!" },
+  ];
+  const [step, setStep] = useState(0);
+  const cur = steps[step];
+  const edges = [[1,2],[1,3],[2,4],[2,5],[3,6],[3,7]];
+
+  return (
+    <div>
+      <svg width={520} height={280} style={{ display: "block" }}>
+        {edges.map(([p, c]) => {
+          if (!cur.heap[p] || !cur.heap[c]) return null;
+          const pp = pos[p], cp = pos[c];
+          const isHL = cur.hl.includes(p) && cur.hl.includes(c);
+          return (
+            <line key={`${p}-${c}`} x1={pp.x} y1={pp.y + 20} x2={cp.x} y2={cp.y - 20}
+              stroke={isHL ? "#7c6af7" : "#2a2a3e"} strokeWidth={isHL ? 2.5 : 1.5} />
+          );
+        })}
+        {cur.heap.slice(1).map((val, i) => {
+          if (!val) return null;
+          const idx = i + 1;
+          const p = pos[idx];
+          const isHL = cur.hl.includes(idx);
+          return (
+            <g key={idx}>
+              <circle cx={p.x} cy={p.y} r={22}
+                fill={isHL ? "rgba(124,106,247,0.3)" : "var(--node-bg)"}
+                stroke={isHL ? "#7c6af7" : "#3a3a5e"}
+                strokeWidth={isHL ? 2.5 : 1.5} />
+              <text x={p.x} y={p.y + 6} textAnchor="middle" fontSize={15} fontWeight="700"
+                fill={isHL ? "#7c6af7" : "#e8e8f0"} fontFamily="JetBrains Mono">{val}</text>
+              <text x={p.x} y={p.y + 38} textAnchor="middle" fontSize={9} fill="#3a3a5e" fontFamily="JetBrains Mono">[{idx}]</text>
+            </g>
+          );
+        })}
+        {/* Array representation */}
+        <text x={30} y={255} fontSize={10} fill="#6b6b85" fontFamily="JetBrains Mono">Array: </text>
+        {cur.heap.slice(1).map((v, i) => v && (
+          <g key={i}>
+            <rect x={78 + i * 52} y={242} width={46} height={22} rx={3}
+              fill={cur.hl.includes(i + 1) ? "rgba(124,106,247,0.2)" : "var(--node-bg)"}
+              stroke={cur.hl.includes(i + 1) ? "#7c6af7" : "#2a2a3e"} />
+            <text x={101 + i * 52} y={258} textAnchor="middle" fontSize={12} fill={cur.hl.includes(i+1)?"#7c6af7":"#e8e8f0"} fontFamily="JetBrains Mono">{v}</text>
+          </g>
+        ))}
+      </svg>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>Step {step + 1}/{steps.length}</span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_, i) => <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`} onClick={() => setStep(i)} style={{ cursor: "pointer" }} />)}
+      </div>
+    </div>
+  );
+}
+
+// --- Graph Viz ---
+function GraphViz() {
+  const nodes = {
+    A: { x: 130, y: 60 }, B: { x: 300, y: 40 }, C: { x: 460, y: 80 },
+    D: { x: 80, y: 180 }, E: { x: 250, y: 170 }, F: { x: 400, y: 200 }
+  };
+  const edges = [
+    ["A","B",4],["A","D",2],["B","C",5],["B","E",3],["C","F",1],["D","E",6],["E","F",4]
+  ];
+  const bfsSteps = [
+    { visited: [], queue: ["A"], current: "A", msg: "BFS: Start at A. Queue: [A]." },
+    { visited: ["A"], queue: ["B","D"], current: "B", msg: "Visit A. Enqueue neighbors: B, D. Queue: [B,D]." },
+    { visited: ["A","B"], queue: ["D","C","E"], current: "D", msg: "Visit B. Enqueue C, E. Queue: [D,C,E]." },
+    { visited: ["A","B","D"], queue: ["C","E","E"], current: "C", msg: "Visit D. Neighbor E already noted. Queue: [C,E]." },
+    { visited: ["A","B","D","C"], queue: ["E","F"], current: "E", msg: "Visit C. Enqueue F. Queue: [E,F]." },
+    { visited: ["A","B","D","C","E"], queue: ["F"], current: "F", msg: "Visit E. F already in queue. Queue: [F]." },
+    { visited: ["A","B","D","C","E","F"], queue: [], current: "", msg: "Visit F. Queue empty. BFS complete! Order: A→B→D→C→E→F." },
+  ];
+  const [step, setStep] = useState(0);
+  const cur = bfsSteps[step];
+
+  return (
+    <div>
+      <svg width={520} height={240} style={{ display: "block" }}>
+        {edges.map(([a, b, w]) => {
+          const an = nodes[a], bn = nodes[b];
+          const bothVisited = cur.visited.includes(a) && cur.visited.includes(b);
+          return (
+            <g key={`${a}-${b}`}>
+              <line x1={an.x} y1={an.y} x2={bn.x} y2={bn.y}
+                stroke={bothVisited ? "#6cf7c5" : "#2a2a3e"}
+                strokeWidth={bothVisited ? 2.5 : 1.5} />
+              <text x={(an.x + bn.x) / 2} y={(an.y + bn.y) / 2 - 5}
+                textAnchor="middle" fontSize={11} fill="#6b6b85" fontFamily="JetBrains Mono">{w}</text>
+            </g>
+          );
+        })}
+        {Object.entries(nodes).map(([id, p]) => {
+          const isVisited = cur.visited.includes(id);
+          const isCurrent = cur.current === id;
+          const inQueue = cur.queue.includes(id);
+          const color = isCurrent ? "#f7c96c" : isVisited ? "#6cf7c5" : inQueue ? "#7c6af7" : "#3a3a5e";
+          return (
+            <g key={id}>
+              <circle cx={p.x} cy={p.y} r={24}
+                fill={isCurrent ? "rgba(247,201,108,0.25)" : isVisited ? "rgba(108,247,197,0.15)" : inQueue ? "rgba(124,106,247,0.15)" : "var(--node-bg)"}
+                stroke={color} strokeWidth={isCurrent ? 3 : 2} />
+              <text x={p.x} y={p.y + 6} textAnchor="middle" fontSize={16} fontWeight="700"
+                fill={color} fontFamily="JetBrains Mono">{id}</text>
+            </g>
+          );
+        })}
+        {/* Legend */}
+        <circle cx={30} cy={215} r={7} fill="rgba(247,201,108,0.25)" stroke="#f7c96c" strokeWidth={2} />
+        <text x={42} y={220} fontSize={10} fill="#f7c96c" fontFamily="JetBrains Mono">current</text>
+        <circle cx={105} cy={215} r={7} fill="rgba(108,247,197,0.15)" stroke="#6cf7c5" strokeWidth={2} />
+        <text x={117} y={220} fontSize={10} fill="#6cf7c5" fontFamily="JetBrains Mono">visited</text>
+        <circle cx={180} cy={215} r={7} fill="rgba(124,106,247,0.15)" stroke="#7c6af7" strokeWidth={2} />
+        <text x={192} y={220} fontSize={10} fill="#7c6af7" fontFamily="JetBrains Mono">in queue</text>
+        {/* Queue display */}
+        {cur.queue.length > 0 && (
+          <text x={280} y={220} fontSize={10} fill="#6b6b85" fontFamily="JetBrains Mono">
+            Queue: [{cur.queue.join(",")}]
+          </text>
+        )}
+      </svg>
+      <div className="step-info">{cur.msg}</div>
+      <div className="controls">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(bfsSteps.length - 1, s + 1))} disabled={step === bfsSteps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginLeft: 8 }}>Step {step + 1}/{bfsSteps.length}</span>
+      </div>
+      <div className="step-dots">
+        {bfsSteps.map((_, i) => <div key={i} className={`step-dot ${i === step ? "active" : i < step ? "done" : ""}`} onClick={() => setStep(i)} style={{ cursor: "pointer" }} />)}
+      </div>
+    </div>
+  );
+}
+
+// --- Bubble Sort Viz ---
+function SortingViz() {
+  const initial = [64, 34, 25, 12, 22, 11, 90];
+  const [arr, setArr] = useState([...initial]);
+  const [comparing, setComparing] = useState([]);
+  const [sorted, setSorted] = useState([]);
+  const [running, setRunning] = useState(false);
+  const [msg, setMsg] = useState("Press 'Run Bubble Sort' to start the step-by-step visualization.");
+  const [swapCount, setSwapCount] = useState(0);
+  const stopRef = useRef(false);
+
+  const reset = () => {
+    stopRef.current = true;
+    setArr([...initial]);
+    setComparing([]);
+    setSorted([]);
+    setMsg("Press 'Run Bubble Sort' to start the step-by-step visualization.");
+    setSwapCount(0);
+    setRunning(false);
+  };
+
+  const run = async () => {
+    stopRef.current = false;
+    setRunning(true);
+    setSorted([]);
+    setSwapCount(0);
+    let a = [...initial];
+    setArr([...a]);
+    let swaps = 0;
+    for (let i = 0; i < a.length - 1; i++) {
+      for (let j = 0; j < a.length - i - 1; j++) {
+        if (stopRef.current) { setRunning(false); return; }
+        setComparing([j, j + 1]);
+        setMsg(`Pass ${i+1}: comparing a[${j}]=${a[j]} and a[${j+1}]=${a[j+1]}. ${a[j] > a[j+1] ? "Swap!" : "No swap."}`);
+        await sleep(500);
+        if (a[j] > a[j + 1]) {
+          [a[j], a[j + 1]] = [a[j + 1], a[j]];
+          swaps++;
+          setArr([...a]);
+          setSwapCount(swaps);
+          await sleep(350);
+        }
+      }
+      setSorted(prev => [...prev, a.length - 1 - i]);
+    }
+    setSorted([...Array(a.length).keys()]);
+    setComparing([]);
+    setMsg(`✓ Sorted! Total swaps: ${swaps}. O(n²) comparisons in the worst case.`);
+    setRunning(false);
+  };
+
+  const maxVal = Math.max(...arr);
+  const barW = 52, barGap = 10;
+
+  return (
+    <div>
+      <svg width={520} height={200} style={{ display: "block" }}>
+        {arr.map((val, i) => {
+          const h = Math.round((val / maxVal) * 140);
+          const x = 20 + i * (barW + barGap);
+          const isCmp = comparing.includes(i);
+          const isSorted = sorted.includes(i);
+          const color = isSorted ? "#6cf7c5" : isCmp ? "#f7c96c" : "#7c6af7";
+          return (
+            <g key={i}>
+              <rect x={x} y={160 - h} width={barW} height={h} rx={4}
+                fill={`${color}30`} stroke={color} strokeWidth={isCmp ? 2.5 : 1.5}
+                style={{ transition: "all 0.3s" }} />
+              <text x={x + barW / 2} y={175} textAnchor="middle" fontSize={13} fontWeight="700"
+                fill={color} fontFamily="JetBrains Mono">{val}</text>
+              {isCmp && <text x={x + barW / 2} y={155 - h} textAnchor="middle" fontSize={10} fill={color} fontFamily="JetBrains Mono">↑</text>}
+            </g>
+          );
+        })}
+      </svg>
+      <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>
+        Swaps so far: <span style={{ color: "var(--accent4)" }}>{swapCount}</span>
+      </div>
+      <div className="step-info">{msg}</div>
+      <div className="controls">
+        <button className="btn btn-primary" onClick={run} disabled={running}>▶ Run Bubble Sort</button>
+        <button className="btn" onClick={reset} disabled={running}>↺ Reset</button>
+        <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "var(--muted)" }}>
+          {running ? "⏳ Running..." : ""}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// CHAPTER CONTENT
+// ============================================================
+function ChapterIntro() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="00">
+        <div className="chapter-tag">Chapter 0</div>
+        <h2 className="chapter-title">Introduction to<br />Data Structures</h2>
+        <p className="chapter-desc">Understanding how data is organized, stored, and accessed is the foundation of efficient programming.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">What is a Data Structure?</div>
+          <p className="prose">A <strong style={{color:"var(--accent)"}}>data structure</strong> is a particular way of organizing and storing data in a computer so that it can be accessed and modified efficiently. Think of it as a container — different containers are suited for different purposes.</p>
+          <p className="prose">Just as a library uses a specific system to organize books (by genre, author, or Dewey Decimal), programs use data structures to organize data so that operations like searching, inserting, and deleting can be performed optimally.</p>
+          <div className="info-card">
+            <strong>The core trade-off:</strong> Every data structure makes trade-offs between time complexity (how fast operations run), space complexity (how much memory is used), and simplicity of implementation.
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Why Do They Matter?</div>
+          <p className="prose">Choosing the wrong data structure can mean the difference between an algorithm that runs in milliseconds and one that takes hours. A search through an unsorted list of 1 billion items takes 1 billion steps. A binary search tree does it in just 30.</p>
+          <table className="complexity-table">
+            <thead><tr><th>Data Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Best For</th></tr></thead>
+            <tbody>
+              <tr><td>Array</td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td>Index-based access</td></tr>
+              <tr><td>Hash Table</td><td>O(1) avg</td><td>O(1) avg</td><td>O(1) avg</td><td>Key-value lookups</td></tr>
+              <tr><td>BST (balanced)</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td><td>Sorted data, range queries</td></tr>
+              <tr><td>Linked List</td><td>O(n)</td><td>O(1) head</td><td>O(1) known</td><td>Frequent inserts/deletes</td></tr>
+              <tr><td>Stack</td><td>O(n)</td><td>O(1)</td><td>O(1)</td><td>LIFO operations</td></tr>
+              <tr><td>Queue</td><td>O(n)</td><td>O(1)</td><td>O(1)</td><td>FIFO operations</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-title">Big-O Notation</div>
+          <p className="prose">Big-O describes how the runtime or space requirement grows as input size (n) grows. It's the universal language of algorithm efficiency.</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+            {[["O(1)","Constant","green"],["O(log n)","Logarithmic","green"],["O(n)","Linear","yellow"],["O(n log n)","Linearithmic","yellow"],["O(n²)","Quadratic","red"],["O(2ⁿ)","Exponential","red"]].map(([o,l,c]) => (
+              <div key={o} style={{ textAlign: "center" }}>
+                <div className={`badge badge-${c}`} style={{ fontSize: 13, padding: "6px 12px" }}>{o}</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "var(--muted)", marginTop: 4 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterArrays() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="01">
+        <div className="chapter-tag">Chapter 1</div>
+        <h2 className="chapter-title">Arrays</h2>
+        <p className="chapter-desc">The most fundamental data structure — a fixed-size, ordered collection stored in contiguous memory.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">How Arrays Work in Memory</div>
+          <p className="prose">An array stores elements in <strong style={{color:"var(--accent)"}}>contiguous memory locations</strong>. Because each element is the same size and addresses are sequential, accessing any element by index is O(1) — a simple arithmetic calculation.</p>
+          <div className="viz-container">
+            <div className="viz-title">Interactive Memory Visualization</div>
+            <ArrayViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Dynamic Arrays (e.g., JavaScript Array, Python List)</div>
+          <p className="prose">Dynamic arrays automatically resize. When capacity is exceeded, they allocate a new block (typically 2× size) and copy all elements. This amortizes the cost of growth to O(1) per append on average.</p>
+          <div className="info-card">
+            <strong>Growth strategy:</strong> If current capacity = 4 and you push a 5th element: allocate capacity 8, copy 4 elements, insert. The copy cost O(n) is spread over n subsequent operations → amortized O(1).
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Implementation</div>
+          <div className="code-block">
+            <span className="cm">// Static array — fixed size</span>{"\n"}
+            <span className="kw">int</span> arr[<span className="num">5</span>] = {"{"}
+            <span className="num">10</span>, <span className="num">20</span>, <span className="num">30</span>, <span className="num">40</span>, <span className="num">50</span>{"}"};{"\n\n"}
+            <span className="cm">// Dynamic array (Python-style)</span>{"\n"}
+            <span className="kw">class</span> <span className="cls">DynamicArray</span>:{"\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">__init__</span>(self):{"\n"}
+            {"        "}self.data = [<span className="kw">None</span>] * <span className="num">1</span>{"\n"}
+            {"        "}self.size = <span className="num">0</span>; self.capacity = <span className="num">1</span>{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">append</span>(self, val):{"\n"}
+            {"        "}<span className="kw">if</span> self.size == self.capacity:{"\n"}
+            {"            "}<span className="fn">self._resize</span>(self.capacity * <span className="num">2</span>){"\n"}
+            {"        "}self.data[self.size] = val{"\n"}
+            {"        "}self.size += <span className="num">1</span>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Complexity Summary</div>
+          <table className="complexity-table">
+            <thead><tr><th>Operation</th><th>Time</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Access by index</td><td><span className="badge badge-green">O(1)</span></td><td>base_addr + i × element_size</td></tr>
+              <tr><td>Search (unsorted)</td><td><span className="badge badge-yellow">O(n)</span></td><td>Linear scan</td></tr>
+              <tr><td>Search (sorted, binary)</td><td><span className="badge badge-green">O(log n)</span></td><td>Requires sorted array</td></tr>
+              <tr><td>Insert at end</td><td><span className="badge badge-green">O(1)*</span></td><td>*Amortized for dynamic</td></tr>
+              <tr><td>Insert at position</td><td><span className="badge badge-yellow">O(n)</span></td><td>Must shift elements</td></tr>
+              <tr><td>Delete at position</td><td><span className="badge badge-yellow">O(n)</span></td><td>Must shift elements</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterLinkedList() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="02">
+        <div className="chapter-tag">Chapter 2</div>
+        <h2 className="chapter-title">Linked Lists</h2>
+        <p className="chapter-desc">A chain of nodes where each node stores a value and a pointer to the next — no contiguous memory required.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Node Structure & Pointers</div>
+          <p className="prose">Each node in a linked list contains two things: <strong style={{color:"var(--accent)"}}>data</strong> (the value) and a <strong style={{color:"var(--accent3)"}}>pointer</strong> (the memory address of the next node). Nodes can live anywhere in memory — they don't need to be adjacent.</p>
+          <div className="viz-container">
+            <div className="viz-title">Linked List — Traversal & Operations</div>
+            <LinkedListViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Types of Linked Lists</div>
+          <p className="prose">There are three main variants, each with different trade-offs for navigation and memory use.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, margin: "16px 0" }}>
+            {[
+              { name: "Singly Linked", desc: "Each node points to the next only. Simple, less memory. Can only traverse forward.", color: "#7c6af7" },
+              { name: "Doubly Linked", desc: "Each node has next AND prev pointers. O(1) delete with node reference. 2× pointer memory.", color: "#6cf7c5" },
+              { name: "Circular Linked", desc: "Last node points back to head. Great for round-robin scheduling and buffers.", color: "#f7c96c" },
+            ].map(t => (
+              <div key={t.name} style={{ background: `${t.color}10`, border: `1px solid ${t.color}40`, borderRadius: 8, padding: 16 }}>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 13, fontWeight: 700, color: t.color, marginBottom: 8 }}>{t.name}</div>
+                <div style={{ fontSize: 13, color: "#c0c0d8", lineHeight: 1.6 }}>{t.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Implementation</div>
+          <div className="code-block">
+            <span className="kw">class</span> <span className="cls">Node</span>:{"\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">__init__</span>(self, data):{"\n"}
+            {"        "}self.data = data{"\n"}
+            {"        "}self.next = <span className="kw">None</span>{"\n\n"}
+            <span className="kw">class</span> <span className="cls">LinkedList</span>:{"\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">prepend</span>(self, data):   <span className="cm"># O(1)</span>{"\n"}
+            {"        "}new_node = <span className="cls">Node</span>(data){"\n"}
+            {"        "}new_node.next = self.head{"\n"}
+            {"        "}self.head = new_node{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">delete</span>(self, data):   <span className="cm"># O(n) to find, O(1) to remove</span>{"\n"}
+            {"        "}cur = self.head{"\n"}
+            {"        "}<span className="kw">while</span> cur.next <span className="kw">and</span> cur.next.data != data:{"\n"}
+            {"            "}cur = cur.next{"\n"}
+            {"        "}cur.next = cur.next.next  <span className="cm"># skip the node</span>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Array vs. Linked List</div>
+          <table className="complexity-table">
+            <thead><tr><th>Operation</th><th>Array</th><th>Linked List</th><th>Winner</th></tr></thead>
+            <tbody>
+              <tr><td>Access by index</td><td><span className="badge badge-green">O(1)</span></td><td><span className="badge badge-red">O(n)</span></td><td>Array</td></tr>
+              <tr><td>Insert at head</td><td><span className="badge badge-red">O(n)</span></td><td><span className="badge badge-green">O(1)</span></td><td>Linked List</td></tr>
+              <tr><td>Insert in middle</td><td><span className="badge badge-red">O(n)</span></td><td><span className="badge badge-yellow">O(n) find</span></td><td>Tie</td></tr>
+              <tr><td>Memory</td><td>Compact</td><td>+pointer overhead</td><td>Array</td></tr>
+              <tr><td>Cache performance</td><td>Excellent</td><td>Poor (scattered)</td><td>Array</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterStack() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="03">
+        <div className="chapter-tag">Chapter 3</div>
+        <h2 className="chapter-title">Stacks</h2>
+        <p className="chapter-desc">Last In, First Out (LIFO) — an abstract data type with push, pop, and peek operations.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">The LIFO Principle</div>
+          <p className="prose">A stack restricts access to one end only — the <strong style={{color:"var(--accent)"}}>top</strong>. You can only add (push) to the top and remove (pop) from the top. This constraint makes stacks perfect for problems involving nesting, backtracking, and undo operations.</p>
+          <div className="viz-container">
+            <div className="viz-title">Stack — Push, Pop & Peek Operations</div>
+            <StackViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Real-World Applications</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            {[
+              { icon: "↩", title: "Undo/Redo", desc: "Text editors push every edit onto a stack. Undo pops the last action." },
+              { icon: "{}", title: "Brackets Matching", desc: "Compiler uses a stack to verify ( [ { } ] ) nesting is correct." },
+              { icon: "📞", title: "Call Stack", desc: "Every function call pushes a frame; return pops it. Recursion depth = stack depth." },
+              { icon: "🌐", title: "Browser History", desc: "Back button pops visited URLs. Forward button uses a second stack." },
+            ].map(a => (
+              <div key={a.title} style={{ background: "rgba(124,106,247,0.07)", border: "1px solid rgba(124,106,247,0.2)", borderRadius: 8, padding: 16 }}>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>{a.icon}</div>
+                <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: 4, fontSize: 14 }}>{a.title}</div>
+                <div style={{ fontSize: 13, color: "#c0c0d8", lineHeight: 1.6 }}>{a.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Implementation</div>
+          <div className="code-block">
+            <span className="kw">class</span> <span className="cls">Stack</span>:{"\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">__init__</span>(self): self._data = []{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">push</span>(self, item):     <span className="cm"># O(1)</span>{"\n"}
+            {"        "}self._data.append(item){"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">pop</span>(self):          <span className="cm"># O(1)</span>{"\n"}
+            {"        "}<span className="kw">if</span> self.is_empty(): <span className="kw">raise</span> <span className="cls">IndexError</span>(<span className="str">"pop from empty stack"</span>){"\n"}
+            {"        "}<span className="kw">return</span> self._data.pop(){"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">peek</span>(self):         <span className="cm"># O(1)</span>{"\n"}
+            {"        "}<span className="kw">return</span> self._data[-<span className="num">1</span>]{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">is_empty</span>(self): <span className="kw">return</span> len(self._data) == <span className="num">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterQueue() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="04">
+        <div className="chapter-tag">Chapter 4</div>
+        <h2 className="chapter-title">Queues</h2>
+        <p className="chapter-desc">First In, First Out (FIFO) — the fundamental structure for ordered, fair processing.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">The FIFO Principle</div>
+          <p className="prose">A queue adds elements at the <strong style={{color:"var(--accent2)"}}>rear</strong> (enqueue) and removes them from the <strong style={{color:"var(--accent3)"}}>front</strong> (dequeue). This ensures fairness — the first one in is the first one served.</p>
+          <div className="viz-container">
+            <div className="viz-title">Queue — Enqueue, Dequeue & Peek</div>
+            <QueueViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Queue Variants</div>
+          <div className="info-card">
+            <strong>Circular Queue:</strong> The rear wraps around to the front when reaching the end of the underlying array — eliminates wasted space.<br /><br />
+            <strong>Priority Queue:</strong> Elements dequeue in priority order, not arrival order. Implemented with a Heap. Used in Dijkstra's shortest path algorithm.<br /><br />
+            <strong>Deque (Double-Ended Queue):</strong> Supports O(1) insert/delete at both ends. Python's collections.deque is an example.
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Implementation with Two Stacks</div>
+          <p className="prose">A classic interview problem: implement a queue using two stacks. Push to stack1; when dequeuing, if stack2 is empty, pour stack1 into stack2. Amortized O(1) per operation.</p>
+          <div className="code-block">
+            <span className="kw">class</span> <span className="cls">QueueWithTwoStacks</span>:{"\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">__init__</span>(self):{"\n"}
+            {"        "}self.inbox = []   <span className="cm"># stack1</span>{"\n"}
+            {"        "}self.outbox = []  <span className="cm"># stack2</span>{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">enqueue</span>(self, val):  <span className="cm"># O(1)</span>{"\n"}
+            {"        "}self.inbox.append(val){"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">dequeue</span>(self):     <span className="cm"># O(1) amortized</span>{"\n"}
+            {"        "}<span className="kw">if not</span> self.outbox:{"\n"}
+            {"            "}<span className="kw">while</span> self.inbox:{"\n"}
+            {"                "}self.outbox.append(self.inbox.pop()){"\n"}
+            {"        "}<span className="kw">return</span> self.outbox.pop()
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterHashTable() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="05">
+        <div className="chapter-tag">Chapter 5</div>
+        <h2 className="chapter-title">Hash Tables</h2>
+        <p className="chapter-desc">The magic of O(1) average-case lookups — using a hash function to map keys to array indices.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Hash Functions & Buckets</div>
+          <p className="prose">A <strong style={{color:"var(--accent)"}}>hash function</strong> transforms a key (string, integer, etc.) into an array index. The goal is to distribute keys uniformly across the array (buckets) to minimize collisions and enable O(1) average access.</p>
+          <div className="viz-container">
+            <div className="viz-title">Hash Table — Insert & Lookup Walkthrough</div>
+            <HashTableViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Collision Resolution</div>
+          <p className="prose">Collisions occur when two keys hash to the same index. Two main strategies resolve them:</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, margin: "16px 0" }}>
+            <div className="info-card">
+              <strong>Separate Chaining:</strong> Each bucket holds a linked list. Multiple keys can share a bucket. Worst case O(n) if all keys collide.
+            </div>
+            <div className="info-card">
+              <strong>Open Addressing:</strong> On collision, probe for the next empty slot (linear, quadratic, or double hashing). All data in the array — good cache performance.
+            </div>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Load Factor & Resizing</div>
+          <p className="prose">Load factor α = n/m (items/buckets). When α &gt; 0.7, performance degrades. Most implementations resize (double the table, rehash all keys) to keep α low.</p>
+          <div className="code-block">
+            <span className="cm"># Simple hash map in Python</span>{"\n"}
+            <span className="kw">class</span> <span className="cls">HashMap</span>:{"\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">__init__</span>(self, size=<span className="num">16</span>):{"\n"}
+            {"        "}self.buckets = [[] <span className="kw">for</span> _ <span className="kw">in</span> range(size)]{"\n"}
+            {"        "}self.size = size{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">_hash</span>(self, key):{"\n"}
+            {"        "}<span className="kw">return</span> hash(key) % self.size{"\n\n"}
+            {"    "}<span className="kw">def</span> <span className="fn">put</span>(self, key, val):{"\n"}
+            {"        "}bucket = self.buckets[self.<span className="fn">_hash</span>(key)]{"\n"}
+            {"        "}<span className="kw">for</span> i, (k, v) <span className="kw">in</span> enumerate(bucket):{"\n"}
+            {"            "}<span className="kw">if</span> k == key: bucket[i] = (key, val); <span className="kw">return</span>{"\n"}
+            {"        "}bucket.append((key, val))
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterBST() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="06">
+        <div className="chapter-tag">Chapter 6</div>
+        <h2 className="chapter-title">Binary Search Trees</h2>
+        <p className="chapter-desc">A hierarchical structure enabling O(log n) search, insert, and delete — with the elegance of sorted order built in.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">BST Property & Insertion</div>
+          <p className="prose">For every node N: <strong style={{color:"var(--accent)"}}>all values in the left subtree &lt; N</strong>, and <strong style={{color:"var(--accent3)"}}>all values in the right subtree &gt; N</strong>. This invariant makes search, insert, and delete O(log n) for balanced trees.</p>
+          <div className="viz-container">
+            <div className="viz-title">BST — Build, Search & In-Order Traversal</div>
+            <BSTViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Tree Traversals</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+            {[
+              { name: "In-Order (L→N→R)", result: "Sorted ascending output", color: "#6cf7c5" },
+              { name: "Pre-Order (N→L→R)", result: "Used to copy/serialize trees", color: "#7c6af7" },
+              { name: "Post-Order (L→R→N)", result: "Used to delete trees", color: "#f7c96c" },
+              { name: "Level-Order (BFS)", result: "Process nodes level by level", color: "#f76c6c" },
+            ].map(t => (
+              <div key={t.name} style={{ background: `${t.color}10`, border: `1px solid ${t.color}30`, borderRadius: 8, padding: 16 }}>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: t.color, fontWeight: 700, marginBottom: 6 }}>{t.name}</div>
+                <div style={{ fontSize: 13, color: "#c0c0d8" }}>{t.result}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Balancing: AVL & Red-Black Trees</div>
+          <p className="prose">An unbalanced BST (e.g., inserting 1,2,3,4,5 in order) degrades to O(n) — it becomes a linked list! <strong style={{color:"var(--accent)"}}>Self-balancing trees</strong> (AVL Trees, Red-Black Trees) rebalance on insert/delete via rotations, guaranteeing O(log n) in all cases.</p>
+          <div className="info-card">
+            <strong>AVL Trees:</strong> Strictly balanced (height difference of subtrees ≤ 1). Faster lookups but more rotations on insert.<br /><br />
+            <strong>Red-Black Trees:</strong> Loosely balanced (used in std::map in C++ and Java's TreeMap). Fewer rotations — better for frequent inserts/deletes.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterHeap() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="07">
+        <div className="chapter-tag">Chapter 7</div>
+        <h2 className="chapter-title">Heaps</h2>
+        <p className="chapter-desc">A complete binary tree satisfying the heap property — the backbone of priority queues and HeapSort.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Max-Heap: Structure & Operations</div>
+          <p className="prose">A <strong style={{color:"var(--accent)"}}>max-heap</strong> guarantees the parent is always ≥ its children, making the maximum always at the root. A <strong style={{color:"var(--accent3)"}}>min-heap</strong> does the opposite. Heaps are stored as arrays — no pointers needed!</p>
+          <div className="viz-container">
+            <div className="viz-title">Max-Heap — Insert, Extract-Max & Heapify</div>
+            <HeapViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Array Representation</div>
+          <p className="prose">Heaps use a compact array representation. For a node at index i: left child = 2i, right child = 2i+1, parent = ⌊i/2⌋. No null pointers, excellent cache performance!</p>
+          <div className="info-card">
+            <strong>HeapSort:</strong> Build a max-heap in O(n), then repeatedly extract-max in O(log n). Total: O(n log n) — in-place, not stable, but excellent worst-case guarantee vs QuickSort.
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Priority Queue Applications</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            {[
+              { icon: "🗺", title: "Dijkstra's Algorithm", desc: "Min-heap always gives the unvisited node with the shortest current distance." },
+              { icon: "🏥", title: "Hospital Triage", desc: "Patients treated in priority order, not arrival order." },
+              { icon: "📊", title: "Task Scheduling", desc: "OS scheduler uses priority queues to manage process execution order." },
+              { icon: "📡", title: "Event Simulation", desc: "Events processed in chronological order using a min-heap on timestamps." },
+            ].map(a => (
+              <div key={a.title} style={{ background: "rgba(108,247,197,0.06)", border: "1px solid rgba(108,247,197,0.2)", borderRadius: 8, padding: 16 }}>
+                <div style={{ fontSize: 22, marginBottom: 8 }}>{a.icon}</div>
+                <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: 4, fontSize: 14 }}>{a.title}</div>
+                <div style={{ fontSize: 13, color: "#c0c0d8", lineHeight: 1.6 }}>{a.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterGraph() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="08">
+        <div className="chapter-tag">Chapter 8</div>
+        <h2 className="chapter-title">Graphs</h2>
+        <p className="chapter-desc">The most versatile structure — vertices connected by edges, modeling networks, relationships, and maps.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">BFS Traversal on a Weighted Graph</div>
+          <p className="prose">Graphs consist of <strong style={{color:"var(--accent)"}}>vertices (nodes)</strong> and <strong style={{color:"var(--accent3)"}}>edges (connections)</strong>. Edges can be directed or undirected, weighted or unweighted. BFS explores level by level using a queue; DFS explores as deep as possible using a stack.</p>
+          <div className="viz-container">
+            <div className="viz-title">Graph BFS — Step by Step</div>
+            <GraphViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Graph Representations</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: "var(--accent)", marginBottom: 8 }}>Adjacency List</div>
+              <div className="code-block" style={{ fontSize: 12 }}>
+                graph = {"{"}{"\n"}
+                {"  "}<span className="str">'A'</span>: [<span className="str">'B'</span>, <span className="str">'D'</span>],{"\n"}
+                {"  "}<span className="str">'B'</span>: [<span className="str">'A'</span>, <span className="str">'C'</span>, <span className="str">'E'</span>],{"\n"}
+                {"  "}<span className="str">'C'</span>: [<span className="str">'B'</span>, <span className="str">'F'</span>],{"\n"}
+                {"  "}<span className="str">'D'</span>: [<span className="str">'A'</span>, <span className="str">'E'</span>]{"\n"}
+                {"}"}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>Space: O(V+E). Best for sparse graphs.</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 12, color: "var(--accent3)", marginBottom: 8 }}>Adjacency Matrix</div>
+              <div className="code-block" style={{ fontSize: 12 }}>
+                <span className="cm">#  A B C D E F</span>{"\n"}
+                A: [<span className="num">0</span>,<span className="num">1</span>,<span className="num">0</span>,<span className="num">1</span>,<span className="num">0</span>,<span className="num">0</span>]{"\n"}
+                B: [<span className="num">1</span>,<span className="num">0</span>,<span className="num">1</span>,<span className="num">0</span>,<span className="num">1</span>,<span className="num">0</span>]{"\n"}
+                C: [<span className="num">0</span>,<span className="num">1</span>,<span className="num">0</span>,<span className="num">0</span>,<span className="num">0</span>,<span className="num">1</span>]{"\n"}
+                D: [<span className="num">1</span>,<span className="num">0</span>,<span className="num">0</span>,<span className="num">0</span>,<span className="num">1</span>,<span className="num">0</span>]
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>Space: O(V²). O(1) edge lookup.</div>
+            </div>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Key Graph Algorithms</div>
+          <table className="complexity-table">
+            <thead><tr><th>Algorithm</th><th>Purpose</th><th>Complexity</th></tr></thead>
+            <tbody>
+              <tr><td>BFS</td><td>Shortest path (unweighted), level traversal</td><td>O(V + E)</td></tr>
+              <tr><td>DFS</td><td>Cycle detection, topological sort, connectivity</td><td>O(V + E)</td></tr>
+              <tr><td>Dijkstra's</td><td>Shortest path (non-negative weights)</td><td>O((V+E) log V)</td></tr>
+              <tr><td>Bellman-Ford</td><td>Shortest path (negative weights allowed)</td><td>O(VE)</td></tr>
+              <tr><td>Kruskal's/Prim's</td><td>Minimum spanning tree</td><td>O(E log E)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChapterSorting() {
+  return (
+    <div>
+      <div className="chapter-hero" data-number="09">
+        <div className="chapter-tag">Chapter 9</div>
+        <h2 className="chapter-title">Sorting Algorithms</h2>
+        <p className="chapter-desc">From O(n²) simple sorts to O(n log n) optimal algorithms — understanding the spectrum of sorting strategies.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Bubble Sort — Live Animation</div>
+          <p className="prose">Bubble Sort repeatedly steps through the list, compares adjacent elements and swaps them if they're in the wrong order. Largest elements "bubble" to the end. Simple but O(n²).</p>
+          <div className="viz-container">
+            <div className="viz-title">Animated Bubble Sort</div>
+            <SortingViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Comparison: All Major Sorting Algorithms</div>
+          <table className="complexity-table">
+            <thead><tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Space</th><th>Stable?</th></tr></thead>
+            <tbody>
+              <tr><td>Bubble Sort</td><td>O(n)</td><td>O(n²)</td><td><span className="badge badge-red">O(n²)</span></td><td>O(1)</td><td>✓</td></tr>
+              <tr><td>Selection Sort</td><td>O(n²)</td><td>O(n²)</td><td><span className="badge badge-red">O(n²)</span></td><td>O(1)</td><td>✗</td></tr>
+              <tr><td>Insertion Sort</td><td>O(n)</td><td>O(n²)</td><td><span className="badge badge-red">O(n²)</span></td><td>O(1)</td><td>✓</td></tr>
+              <tr><td>Merge Sort</td><td>O(n log n)</td><td><span className="badge badge-green">O(n log n)</span></td><td><span className="badge badge-green">O(n log n)</span></td><td>O(n)</td><td>✓</td></tr>
+              <tr><td>Quick Sort</td><td>O(n log n)</td><td><span className="badge badge-green">O(n log n)</span></td><td>O(n²)</td><td>O(log n)</td><td>✗</td></tr>
+              <tr><td>Heap Sort</td><td>O(n log n)</td><td><span className="badge badge-green">O(n log n)</span></td><td><span className="badge badge-green">O(n log n)</span></td><td>O(1)</td><td>✗</td></tr>
+              <tr><td>Radix Sort</td><td colSpan={3} style={{textAlign:"center"}}><span className="badge badge-green">O(nk)</span></td><td>O(n+k)</td><td>✓</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-title">Merge Sort — Divide and Conquer</div>
+          <p className="prose">Merge sort splits the array in half recursively until each piece has 1 element, then merges sorted halves. Guaranteed O(n log n) — the theoretical optimal for comparison-based sorting.</p>
+          <div className="code-block">
+            <span className="kw">def</span> <span className="fn">merge_sort</span>(arr):{"\n"}
+            {"    "}<span className="kw">if</span> len(arr) &lt;= <span className="num">1</span>: <span className="kw">return</span> arr{"\n"}
+            {"    "}mid = len(arr) // <span className="num">2</span>{"\n"}
+            {"    "}left = <span className="fn">merge_sort</span>(arr[:mid])    <span className="cm"># T(n/2)</span>{"\n"}
+            {"    "}right = <span className="fn">merge_sort</span>(arr[mid:])   <span className="cm"># T(n/2)</span>{"\n"}
+            {"    "}<span className="kw">return</span> <span className="fn">merge</span>(left, right)         <span className="cm"># O(n)</span>{"\n\n"}
+            <span className="cm"># Recurrence: T(n) = 2T(n/2) + O(n) → O(n log n)</span>
+          </div>
+          <div className="info-card">
+            <strong>When to use which sort?</strong><br />
+            Small arrays (&lt;20 elements): Insertion Sort (excellent cache behavior)<br />
+            General purpose: QuickSort (fastest in practice, good cache)<br />
+            Stability required: Merge Sort<br />
+            Guaranteed worst-case: Merge Sort or Heap Sort<br />
+            Integers in a range: Counting Sort or Radix Sort (beats O(n log n))
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+const chapterComponents = {
+  intro: ChapterIntro,
+  arrays: ChapterArrays,
+  linkedlist: ChapterLinkedList,
+  stack: ChapterStack,
+  queue: ChapterQueue,
+  hashtable: ChapterHashTable,
+  bst: ChapterBST,
+  heap: ChapterHeap,
+  graph: ChapterGraph,
+  sorting: ChapterSorting,
+};
+
+const groups = ["Foundations", "Linear", "Hash-Based", "Trees", "Graphs", "Algorithms"];
+
+function App() {
+  const [active, setActive] = useState("intro");
+  const ActiveChapter = chapterComponents[active];
+
+  return (
+    <>
+      <style>{globalStyles}</style>
+      <div className="book-container">
+        {/* Sidebar */}
+        <nav className="sidebar">
+          <div className="sidebar-logo">
+            <h1>DATA STRUCTURES</h1>
+            <p>Interactive Visual Book</p>
+          </div>
+          {groups.map(g => {
+            const items = chapters.filter(c => c.group === g);
+            if (!items.length) return null;
+            return (
+              <div className="chapter-group" key={g}>
+                <div className="chapter-group-label">{g}</div>
+                {items.map(ch => (
+                  <div key={ch.id} className={`nav-item ${active === ch.id ? "active" : ""}`}
+                    onClick={() => setActive(ch.id)}>
+                    <span className="icon">{ch.icon}</span>
+                    {ch.title}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </nav>
+        {/* Content */}
+        <main className="main">
+          <ActiveChapter />
+          {/* Bottom navigation */}
+          <div style={{ padding: "24px 60px 40px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between" }}>
+            {(() => {
+              const idx = chapters.findIndex(c => c.id === active);
+              const prev = chapters[idx - 1];
+              const next = chapters[idx + 1];
+              return (
+                <>
+                  {prev ? (
+                    <button className="btn" onClick={() => setActive(prev.id)}>← {prev.title}</button>
+                  ) : <div />}
+                  {next && (
+                    <button className="btn btn-primary" onClick={() => setActive(next.id)}>{next.title} →</button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

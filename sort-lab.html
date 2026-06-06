@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sort Lab — Sorting Algorithm Simulator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{background:#060608}</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+
+// ─── STYLES ──────────────────────────────────────────────────────────────────
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#060608;
+  --panel:#0d0d12;
+  --panel2:#13131a;
+  --border:#1e1e2a;
+  --border2:#282836;
+  --text:#e8e8f2;
+  --muted:#4a4a62;
+  --muted2:#7a7a96;
+
+  --compare:#f0c040;
+  --swap:#ff4d6d;
+  --sorted:#00e5a0;
+  --pivot:#bf7fff;
+  --default:#3a5af0;
+  --merge:#00c8ff;
+
+  --bubble:  #f0c040;
+  --selection:#ff6b35;
+  --insertion:#00e5a0;
+  --merge-c:  #00c8ff;
+  --quick:   #bf7fff;
+  --heap:    #ff4d6d;
+  --shell:   #f97316;
+  --radix:   #06b6d4;
+}
+
+html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;height:100%}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.app{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  max-width:1400px;margin:0 auto;
+  padding:0 0 40px;
+}
+
+/* ── HEADER ── */
+.header{
+  padding:28px 36px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:20px; flex-wrap:wrap;
+}
+.header-left h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;letter-spacing:3px;
+  line-height:.95;
+  background:linear-gradient(135deg,#fff 30%,#5577ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.header-left p{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:2px;
+  color:var(--muted2);margin-top:6px;
+  text-transform:uppercase;
+}
+.algo-pills{
+  display:flex;gap:6px;flex-wrap:wrap;
+}
+.pill{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.5px;
+  padding:6px 14px;border-radius:20px;cursor:pointer;
+  border:1px solid var(--border2);
+  background:var(--panel2);color:var(--muted2);
+  transition:all .2s;white-space:nowrap;
+}
+.pill:hover{color:var(--text);border-color:var(--muted2);}
+.pill.active{color:#060608;font-weight:600;}
+
+/* ── MAIN GRID ── */
+.main-grid{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  gap:0;
+  flex:1;
+  border-top:1px solid var(--border);
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  padding:24px 20px;
+  display:flex;flex-direction:column;gap:24px;
+}
+.sidebar-section{}
+.sidebar-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;
+}
+.slider-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-bottom:12px;
+}
+.slider-name{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--muted2);flex:1;
+}
+.slider-val{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;color:var(--text);font-weight:600;
+  min-width:30px;text-align:right;
+}
+input[type=range]{
+  -webkit-appearance:none;height:3px;
+  background:var(--border2);border-radius:2px;
+  outline:none;flex:1;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;
+  border-radius:50%;background:var(--text);cursor:pointer;
+  transition:transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3);}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  padding:8px 16px;border-radius:6px;cursor:pointer;
+  border:1px solid var(--border2);background:var(--panel2);
+  color:var(--text);transition:all .18s;letter-spacing:.5px;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--muted2);}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn-go{
+  background:var(--text);color:#060608;
+  border-color:var(--text);font-weight:600;
+  flex:1;
+}
+.btn-go:hover{background:#c0c0e0;border-color:#c0c0e0;color:#060608;}
+.btn-go.running{
+  background:var(--swap);border-color:var(--swap);
+  animation:pulse-btn 1s infinite;
+}
+@keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* ── STATS PANEL ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.stat-box{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;
+}
+.stat-box .s-label{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:4px;
+}
+.stat-box .s-val{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;
+  letter-spacing:1px;color:var(--text);line-height:1;
+}
+
+.legend{display:flex;flex-direction:column;gap:6px;}
+.legend-item{display:flex;align-items:center;gap:8px;}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.legend-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);}
+
+/* ── COMPLEXITY BOX ── */
+.complexity-box{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:8px;padding:14px;
+}
+.complexity-box .c-title{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:var(--text);font-weight:600;margin-bottom:10px;
+}
+.c-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+.c-key{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted2);}
+.c-badge{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  padding:1px 7px;border-radius:3px;font-weight:600;
+}
+.c-green{background:rgba(0,229,160,.12);color:#00e5a0;border:1px solid rgba(0,229,160,.25);}
+.c-yellow{background:rgba(240,192,64,.12);color:#f0c040;border:1px solid rgba(240,192,64,.25);}
+.c-red{background:rgba(255,77,109,.12);color:#ff4d6d;border:1px solid rgba(255,77,109,.25);}
+
+/* ── VIZ AREA ── */
+.viz-area{
+  display:flex;flex-direction:column;
+  padding:24px 28px;gap:0;
+  position:relative;
+}
+
+.algo-title-row{
+  display:flex;align-items:baseline;gap:16px;
+  margin-bottom:20px;
+}
+.algo-big-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:40px;letter-spacing:2px;
+  line-height:1;
+}
+.algo-phase{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+}
+
+/* ── BAR CHART ── */
+.bar-stage{
+  flex:1;position:relative;
+  background:var(--panel);
+  border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;
+  min-height:320px;
+}
+
+.bars-wrap{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;align-items:flex-end;
+  padding:0 16px 0;
+  height:100%;gap:2px;
+}
+
+.bar{
+  flex:1;border-radius:3px 3px 0 0;
+  transition:height .08s ease, background-color .08s ease;
+  position:relative;min-width:2px;
+}
+
+.bar-val{
+  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  font-family:'IBM Plex Mono',monospace;font-size:9px;
+  color:var(--muted);white-space:nowrap;
+  pointer-events:none;
+}
+
+/* ── STEP LOG ── */
+.step-log{
+  margin-top:16px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:8px;padding:14px 16px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;
+  color:var(--muted2);min-height:42px;line-height:1.5;
+  position:relative;overflow:hidden;
+}
+.step-log::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--compare);border-radius:2px;
+  transition:background .2s;
+}
+.step-log.swap::before{background:var(--swap);}
+.step-log.sorted::before{background:var(--sorted);}
+.step-log.pivot::before{background:var(--pivot);}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap{
+  margin-top:10px;
+  height:3px;background:var(--border);border-radius:2px;overflow:hidden;
+}
+.prog-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--default),var(--sorted));
+  transition:width .3s ease;
+}
+
+/* ── SPEED INDICATOR ── */
+.speed-dots{display:flex;gap:4px;margin-top:8px;}
+.speed-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--border2);transition:background .2s;
+}
+.speed-dot.active{background:var(--sorted);}
+
+/* ── ARRAY PREVIEW (for non-bar modes) ── */
+.array-strip{
+  display:flex;flex-wrap:wrap;gap:4px;
+  padding:12px 16px;
+}
+.arr-cell{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;
+  padding:4px 8px;border-radius:4px;
+  border:1px solid var(--border2);background:var(--panel2);
+  color:var(--text);transition:all .15s;min-width:36px;text-align:center;
+}
+.arr-cell.cmp{background:rgba(240,192,64,.2);border-color:var(--compare);color:var(--compare);}
+.arr-cell.swp{background:rgba(255,77,109,.2);border-color:var(--swap);color:var(--swap);}
+.arr-cell.srt{background:rgba(0,229,160,.15);border-color:var(--sorted);color:var(--sorted);}
+.arr-cell.pvt{background:rgba(191,127,255,.2);border-color:var(--pivot);color:var(--pivot);}
+
+@media(max-width:800px){
+  .main-grid{grid-template-columns:1fr;}
+  .sidebar{border-right:none;border-bottom:1px solid var(--border);}
+  .header-left h1{font-size:36px;}
+}
+`;
+
+// ─── ALGORITHMS ──────────────────────────────────────────────────────────────
+// Each returns an array of "frames" — snapshots of state at each step
+
+function* bubbleSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - i - 1; j++) {
+      comps++;
+      yield { arr: [...a], comparing: [j, j + 1], sorted: range(n - i, n), swaps, comps, phase: "compare", msg: `Comparing a[${j}]=${a[j]} and a[${j+1}]=${a[j+1]}` };
+      if (a[j] > a[j + 1]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        swaps++;
+        yield { arr: [...a], comparing: [j, j + 1], sorted: range(n - i, n), swaps, comps, phase: "swap", msg: `Swapping ${a[j+1]} ↔ ${a[j]} (larger bubbles right)` };
+      }
+    }
+  }
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted! ${swaps} swaps, ${comps} comparisons.` };
+}
+
+function* selectionSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  const sortedSet = [];
+  for (let i = 0; i < n - 1; i++) {
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      comps++;
+      yield { arr: [...a], comparing: [minIdx, j], sorted: [...sortedSet], swaps, comps, phase: "compare", msg: `Pass ${i+1}: min so far=${a[minIdx]}, checking a[${j}]=${a[j]}` };
+      if (a[j] < a[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) {
+      yield { arr: [...a], comparing: [i, minIdx], sorted: [...sortedSet], swaps, comps, phase: "swap", msg: `Swapping minimum ${a[minIdx]} to position ${i}` };
+      [a[i], a[minIdx]] = [a[minIdx], a[i]];
+      swaps++;
+    }
+    sortedSet.push(i);
+    yield { arr: [...a], comparing: [], sorted: [...sortedSet], swaps, comps, phase: "sorted", msg: `Position ${i} locked: ${a[i]} is in final place.` };
+  }
+  sortedSet.push(n - 1);
+  yield { arr: [...a], comparing: [], sorted: [...sortedSet], swaps, comps, phase: "sorted", msg: `✓ Sorted! ${swaps} swaps, ${comps} comparisons.` };
+}
+
+function* insertionSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  yield { arr: [...a], comparing: [0], sorted: [0], swaps, comps, phase: "sorted", msg: `a[0]=${a[0]} is trivially sorted.` };
+  for (let i = 1; i < n; i++) {
+    const key = a[i];
+    let j = i - 1;
+    yield { arr: [...a], comparing: [i], sorted: range(0, i), swaps, comps, phase: "compare", msg: `Inserting ${key} into sorted portion [0..${i-1}]` };
+    while (j >= 0 && a[j] > key) {
+      comps++;
+      a[j + 1] = a[j];
+      swaps++;
+      yield { arr: [...a], comparing: [j, j + 1], sorted: range(0, j), swaps, comps, phase: "swap", msg: `Shifting ${a[j]} right to make room for ${key}` };
+      j--;
+    }
+    a[j + 1] = key;
+    yield { arr: [...a], comparing: [j + 1], sorted: range(0, i + 1), swaps, comps, phase: "sorted", msg: `Inserted ${key} at position ${j+1}. Sorted portion: [0..${i}]` };
+  }
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted! ${swaps} shifts, ${comps} comparisons.` };
+}
+
+function* mergeSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  const sortedSet = new Set();
+
+  function* mergeSortHelper(lo, hi) {
+    if (lo >= hi) { sortedSet.add(lo); return; }
+    const mid = Math.floor((lo + hi) / 2);
+    yield* mergeSortHelper(lo, mid);
+    yield* mergeSortHelper(mid + 1, hi);
+    // merge
+    const left = a.slice(lo, mid + 1);
+    const right = a.slice(mid + 1, hi + 1);
+    let i = 0, j = 0, k = lo;
+    while (i < left.length && j < right.length) {
+      comps++;
+      yield { arr: [...a], comparing: [lo + i, mid + 1 + j], sorted: [...sortedSet], swaps, comps, phase: "compare", msg: `Merging [${lo}..${mid}] + [${mid+1}..${hi}]: comparing ${left[i]} and ${right[j]}` };
+      if (left[i] <= right[j]) { a[k++] = left[i++]; }
+      else { a[k++] = right[j++]; swaps++; }
+      yield { arr: [...a], comparing: [k - 1], sorted: [...sortedSet], swaps, comps, phase: "swap", msg: `Placed ${a[k-1]} at index ${k-1}` };
+    }
+    while (i < left.length) { a[k++] = left[i++]; }
+    while (j < right.length) { a[k++] = right[j++]; }
+    for (let x = lo; x <= hi; x++) sortedSet.add(x);
+    yield { arr: [...a], comparing: [], sorted: [...sortedSet], swaps, comps, phase: "sorted", msg: `Merged range [${lo}..${hi}]` };
+  }
+
+  yield* mergeSortHelper(0, n - 1);
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted! ${comps} comparisons. O(n log n) guaranteed.` };
+}
+
+function* quickSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  const sortedSet = new Set();
+
+  function* partition(lo, hi) {
+    const pivot = a[hi];
+    yield { arr: [...a], comparing: [], pivot: hi, sorted: [...sortedSet], swaps, comps, phase: "pivot", msg: `Pivot = ${pivot} at index ${hi}` };
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      comps++;
+      yield { arr: [...a], comparing: [j], pivot: hi, sorted: [...sortedSet], swaps, comps, phase: "compare", msg: `Comparing a[${j}]=${a[j]} with pivot=${pivot}` };
+      if (a[j] <= pivot) {
+        i++;
+        if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; swaps++; }
+        yield { arr: [...a], comparing: [i, j], pivot: hi, sorted: [...sortedSet], swaps, comps, phase: "swap", msg: `${a[j]} ≤ pivot: swap a[${i}]↔a[${j}]` };
+      }
+    }
+    [a[i + 1], a[hi]] = [a[hi], a[i + 1]]; swaps++;
+    sortedSet.add(i + 1);
+    yield { arr: [...a], comparing: [], pivot: i + 1, sorted: [...sortedSet], swaps, comps, phase: "sorted", msg: `Pivot ${a[i+1]} is now in final position ${i+1}` };
+    return i + 1;
+  }
+
+  function* qs(lo, hi) {
+    if (lo >= hi) { if (lo === hi) sortedSet.add(lo); return; }
+    const pi = yield* partition(lo, hi);
+    yield* qs(lo, pi - 1);
+    yield* qs(pi + 1, hi);
+  }
+
+  yield* qs(0, n - 1);
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted! ${swaps} swaps, ${comps} comparisons.` };
+}
+
+function* heapSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+
+  function* heapify(size, i) {
+    let largest = i;
+    const l = 2 * i + 1, r = 2 * i + 2;
+    comps += 2;
+    if (l < size && a[l] > a[largest]) largest = l;
+    if (r < size && a[r] > a[largest]) largest = r;
+    if (largest !== i) {
+      yield { arr: [...a], comparing: [i, largest], sorted: range(n - (n - size), n), swaps, comps, phase: "swap", msg: `Heapify: swap a[${i}]=${a[i]} with a[${largest}]=${a[largest]}` };
+      [a[i], a[largest]] = [a[largest], a[i]]; swaps++;
+      yield* heapify(size, largest);
+    }
+  }
+
+  yield { arr: [...a], comparing: [], sorted: [], swaps, comps, phase: "compare", msg: `Building max-heap from ${n} elements...` };
+  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) yield* heapify(n, i);
+  yield { arr: [...a], comparing: [], sorted: [], swaps, comps, phase: "sorted", msg: `Max-heap built. Root=${a[0]} is the maximum.` };
+
+  for (let i = n - 1; i > 0; i--) {
+    yield { arr: [...a], comparing: [0, i], sorted: range(i + 1, n), swaps, comps, phase: "swap", msg: `Extract max ${a[0]}: swap with last element ${a[i]}` };
+    [a[0], a[i]] = [a[i], a[0]]; swaps++;
+    yield* heapify(i, 0);
+  }
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted! ${swaps} swaps. O(n log n) guaranteed.` };
+}
+
+function* shellSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  let gap = Math.floor(n / 2);
+  while (gap > 0) {
+    yield { arr: [...a], comparing: [], sorted: [], swaps, comps, phase: "compare", msg: `Gap = ${gap}: comparing elements ${gap} apart` };
+    for (let i = gap; i < n; i++) {
+      const temp = a[i]; let j = i;
+      comps++;
+      while (j >= gap && a[j - gap] > temp) {
+        a[j] = a[j - gap]; swaps++;
+        yield { arr: [...a], comparing: [j, j - gap], sorted: [], swaps, comps, phase: "swap", msg: `Gap=${gap}: shifting a[${j-gap}]=${a[j]} right` };
+        j -= gap;
+      }
+      a[j] = temp;
+    }
+    gap = Math.floor(gap / 2);
+  }
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted! ${swaps} shifts. Shell sort: O(n log²n) average.` };
+}
+
+function* radixSort(arr) {
+  const a = [...arr];
+  const n = a.length;
+  let swaps = 0, comps = 0;
+  const maxVal = Math.max(...a);
+  let exp = 1;
+  const bucketColors = {};
+
+  while (Math.floor(maxVal / exp) > 0) {
+    const digit = exp === 1 ? "ones" : exp === 10 ? "tens" : "hundreds";
+    const output = new Array(n).fill(0);
+    const count = new Array(10).fill(0);
+
+    for (let i = 0; i < n; i++) {
+      const d = Math.floor(a[i] / exp) % 10;
+      count[d]++;
+      comps++;
+      yield { arr: [...a], comparing: [i], sorted: [], swaps, comps, phase: "compare", msg: `${digit} digit of ${a[i]} = ${d} → bucket [${d}]` };
+    }
+    for (let i = 1; i < 10; i++) count[i] += count[i - 1];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = Math.floor(a[i] / exp) % 10;
+      output[count[d] - 1] = a[i]; count[d]--;
+    }
+    for (let i = 0; i < n; i++) { a[i] = output[i]; swaps++; }
+    yield { arr: [...a], comparing: [], sorted: [], swaps, comps, phase: "swap", msg: `Redistributed by ${digit} digit. Array reorganized.` };
+    exp *= 10;
+  }
+  yield { arr: [...a], comparing: [], sorted: range(0, n), swaps, comps, phase: "sorted", msg: `✓ Sorted by Radix Sort! O(nk) — faster than O(n log n) for integers.` };
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function range(a, b) { return Array.from({ length: b - a }, (_, i) => i + a); }
+
+function generateArray(size, pattern) {
+  const n = size;
+  switch (pattern) {
+    case "random": return Array.from({ length: n }, () => Math.floor(Math.random() * 95) + 5);
+    case "nearly": {
+      const a = range(1, n + 1).map(v => Math.round(v * 95 / n) + 5);
+      for (let i = 0; i < Math.max(2, Math.floor(n * 0.1)); i++) {
+        const x = Math.floor(Math.random() * n), y = Math.floor(Math.random() * n);
+        [a[x], a[y]] = [a[y], a[x]];
+      }
+      return a;
+    }
+    case "reversed": return range(1, n + 1).map(v => Math.round((n + 1 - v) * 95 / n) + 5);
+    case "few-unique": return Array.from({ length: n }, () => [10, 30, 50, 70, 90][Math.floor(Math.random() * 5)]);
+    default: return Array.from({ length: n }, () => Math.floor(Math.random() * 95) + 5);
+  }
+}
+
+const ALGORITHMS = {
+  bubble:    { name: "Bubble Sort",    fn: bubbleSort,    color: "var(--bubble)",    best: "O(n)", avg: "O(n²)", worst: "O(n²)", space: "O(1)", stable: "Yes" },
+  selection: { name: "Selection Sort", fn: selectionSort, color: "var(--selection)", best: "O(n²)", avg: "O(n²)", worst: "O(n²)", space: "O(1)", stable: "No" },
+  insertion: { name: "Insertion Sort", fn: insertionSort, color: "var(--insertion)", best: "O(n)", avg: "O(n²)", worst: "O(n²)", space: "O(1)", stable: "Yes" },
+  merge:     { name: "Merge Sort",     fn: mergeSort,     color: "var(--merge-c)",   best: "O(n log n)", avg: "O(n log n)", worst: "O(n log n)", space: "O(n)", stable: "Yes" },
+  quick:     { name: "Quick Sort",     fn: quickSort,     color: "var(--quick)",     best: "O(n log n)", avg: "O(n log n)", worst: "O(n²)", space: "O(log n)", stable: "No" },
+  heap:      { name: "Heap Sort",      fn: heapSort,      color: "var(--heap)",      best: "O(n log n)", avg: "O(n log n)", worst: "O(n log n)", space: "O(1)", stable: "No" },
+  shell:     { name: "Shell Sort",     fn: shellSort,     color: "var(--shell)",     best: "O(n log n)", avg: "O(n log²n)", worst: "O(n²)", space: "O(1)", stable: "No" },
+  radix:     { name: "Radix Sort",     fn: radixSort,     color: "var(--radix)",     best: "O(nk)", avg: "O(nk)", worst: "O(nk)", space: "O(n+k)", stable: "Yes" },
+};
+
+const SPEED_DELAYS = { 1: 500, 2: 200, 3: 80, 4: 30, 5: 8 };
+const PATTERNS = ["random", "nearly", "reversed", "few-unique"];
+
+function complexityClass(c) {
+  if (c.includes("n²") || c.includes("nk")) return "c-yellow";
+  if (c.includes("log n") || c === "O(n)") return "c-green";
+  return "c-yellow";
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+function App() {
+  const [algoKey, setAlgoKey] = useState("bubble");
+  const [size, setSize] = useState(40);
+  const [speed, setSpeed] = useState(3);
+  const [pattern, setPattern] = useState("random");
+  const [array, setArray] = useState(() => generateArray(40, "random"));
+  const [frame, setFrame] = useState({ arr: generateArray(40, "random"), comparing: [], sorted: [], swaps: 0, comps: 0, phase: "idle", msg: "Press ▶ RUN to start the simulation." });
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [totalFrames, setTotalFrames] = useState(0);
+  const [frameIdx, setFrameIdx] = useState(0);
+  const framesRef = useRef([]);
+  const stopRef = useRef(false);
+  const timerRef = useRef(null);
+
+  const algo = ALGORITHMS[algoKey];
+
+  const reset = useCallback((newArr) => {
+    stopRef.current = true;
+    clearTimeout(timerRef.current);
+    setRunning(false);
+    const a = newArr || generateArray(size, pattern);
+    setArray(a);
+    setFrame({ arr: a, comparing: [], sorted: [], pivot: -1, swaps: 0, comps: 0, phase: "idle", msg: "Array ready. Press ▶ RUN to start." });
+    setProgress(0);
+    setFrameIdx(0);
+    setTotalFrames(0);
+  }, [size, pattern]);
+
+  const regenerate = useCallback(() => {
+    reset(generateArray(size, pattern));
+  }, [size, pattern, reset]);
+
+  useEffect(() => { reset(generateArray(size, pattern)); }, [algoKey]);
+
+  const run = useCallback(() => {
+    stopRef.current = false;
+    // collect all frames first
+    const frames = [];
+    const gen = algo.fn([...array]);
+    while (true) {
+      const { value, done } = gen.next();
+      if (done) break;
+      frames.push(value);
+      if (frames.length > 50000) break; // safety cap
+    }
+    framesRef.current = frames;
+    setTotalFrames(frames.length);
+    setRunning(true);
+    setFrameIdx(0);
+
+    let idx = 0;
+    const step = () => {
+      if (stopRef.current || idx >= frames.length) {
+        setRunning(false);
+        return;
+      }
+      setFrame(frames[idx]);
+      setFrameIdx(idx);
+      setProgress(Math.round((idx / Math.max(1, frames.length - 1)) * 100));
+      idx++;
+      timerRef.current = setTimeout(step, SPEED_DELAYS[speed]);
+    };
+    step();
+  }, [array, algo, speed]);
+
+  const stop = useCallback(() => {
+    stopRef.current = true;
+    clearTimeout(timerRef.current);
+    setRunning(false);
+  }, []);
+
+  // Derived bar colors
+  const getBarColor = (i) => {
+    if (frame.sorted && frame.sorted.includes(i)) return "var(--sorted)";
+    if (frame.pivot === i) return "var(--pivot)";
+    if (frame.comparing && frame.comparing.includes(i)) {
+      return frame.phase === "swap" ? "var(--swap)" : "var(--compare)";
+    }
+    return algo.color;
+  };
+
+  const maxVal = Math.max(...(frame.arr || array));
+  const showVals = size <= 20;
+
+  const speedDots = Array.from({ length: 5 }, (_, i) => i < speed);
+
+  return (
+    <>
+      <style>{css}</style>
+      <div className="app">
+        {/* HEADER */}
+        <div className="header">
+          <div className="header-left">
+            <h1>SORT<br />LAB</h1>
+            <p>Sorting Algorithm Simulator · 8 Algorithms</p>
+          </div>
+          <div className="algo-pills">
+            {Object.entries(ALGORITHMS).map(([key, a]) => (
+              <div key={key}
+                className={`pill ${algoKey === key ? "active" : ""}`}
+                style={algoKey === key ? { background: a.color, borderColor: a.color } : {}}
+                onClick={() => { if (!running) setAlgoKey(key); }}>
+                {a.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* MAIN */}
+        <div className="main-grid">
+          {/* SIDEBAR */}
+          <div className="sidebar">
+            <div className="sidebar-section">
+              <div className="sidebar-label">Array Settings</div>
+              <div className="slider-row">
+                <span className="slider-name">Size</span>
+                <input type="range" min={8} max={100} value={size}
+                  onChange={e => { if (!running) { setSize(+e.target.value); reset(generateArray(+e.target.value, pattern)); } }} />
+                <span className="slider-val">{size}</span>
+              </div>
+              <div className="slider-row">
+                <span className="slider-name">Speed</span>
+                <input type="range" min={1} max={5} value={speed}
+                  onChange={e => setSpeed(+e.target.value)} />
+                <span className="slider-val">{speed}×</span>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <div className="sidebar-label" style={{ marginBottom: 8 }}>Pattern</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {PATTERNS.map(p => (
+                    <div key={p}
+                      className={`pill ${pattern === p ? "active" : ""}`}
+                      style={pattern === p ? { background: "var(--text)", borderColor: "var(--text)", fontSize: 10 } : { fontSize: 10 }}
+                      onClick={() => { if (!running) { setPattern(p); reset(generateArray(size, p)); } }}>
+                      {p}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="speed-dots">
+                {speedDots.map((a, i) => <div key={i} className={`speed-dot ${a ? "active" : ""}`} />)}
+                <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: "var(--muted2)", marginLeft: 6 }}>
+                  {["", "Very Slow", "Slow", "Medium", "Fast", "Blazing"][speed]}
+                </span>
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <div className="sidebar-label">Controls</div>
+              <div className="btn-row">
+                <button className={`btn btn-go ${running ? "running" : ""}`}
+                  onClick={running ? stop : run}>
+                  {running ? "■ STOP" : "▶ RUN"}
+                </button>
+                <button className="btn" onClick={regenerate} disabled={running}>↺ New</button>
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <div className="sidebar-label">Live Stats</div>
+              <div className="stats-grid">
+                <div className="stat-box">
+                  <div className="s-label">Comparisons</div>
+                  <div className="s-val">{(frame.comps || 0).toLocaleString()}</div>
+                </div>
+                <div className="stat-box">
+                  <div className="s-label">Swaps</div>
+                  <div className="s-val">{(frame.swaps || 0).toLocaleString()}</div>
+                </div>
+                <div className="stat-box">
+                  <div className="s-label">Progress</div>
+                  <div className="s-val">{progress}%</div>
+                </div>
+                <div className="stat-box">
+                  <div className="s-label">Steps</div>
+                  <div className="s-val">{frameIdx.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <div className="sidebar-label">Complexity</div>
+              <div className="complexity-box">
+                <div className="c-title">{algo.name}</div>
+                {[
+                  ["Best Case", algo.best],
+                  ["Average", algo.avg],
+                  ["Worst Case", algo.worst],
+                  ["Space", algo.space],
+                  ["Stable", algo.stable],
+                ].map(([k, v]) => (
+                  <div className="c-row" key={k}>
+                    <span className="c-key">{k}</span>
+                    <span className={`c-badge ${
+                      v === "Yes" ? "c-green" : v === "No" ? "c-red" :
+                      v.includes("n²") ? "c-red" :
+                      v.includes("n log") || v === "O(n)" || v === "O(1)" ? "c-green" :
+                      "c-yellow"
+                    }`}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="sidebar-section">
+              <div className="sidebar-label">Color Legend</div>
+              <div className="legend">
+                {[
+                  ["var(--compare)", "Comparing"],
+                  ["var(--swap)", "Swapping"],
+                  ["var(--sorted)", "Sorted / Final"],
+                  ["var(--pivot)", "Pivot (Quick Sort)"],
+                ].map(([c, l]) => (
+                  <div className="legend-item" key={l}>
+                    <div className="legend-dot" style={{ background: c }} />
+                    <span className="legend-label">{l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* VIZ */}
+          <div className="viz-area">
+            <div className="algo-title-row">
+              <div className="algo-big-name" style={{ color: algo.color }}>{algo.name.toUpperCase()}</div>
+              <div className="algo-phase" style={{
+                color: frame.phase === "swap" ? "var(--swap)" :
+                       frame.phase === "sorted" ? "var(--sorted)" :
+                       frame.phase === "pivot" ? "var(--pivot)" : "var(--compare)"
+              }}>
+                {frame.phase === "idle" ? "READY" : frame.phase === "sorted" && progress === 100 ? "COMPLETE" : frame.phase?.toUpperCase()}
+              </div>
+            </div>
+
+            {/* BAR CHART */}
+            <div className="bar-stage">
+              <div className="bars-wrap">
+                {(frame.arr || array).map((val, i) => {
+                  const heightPct = (val / maxVal) * 96;
+                  const color = getBarColor(i);
+                  return (
+                    <div key={i} className="bar"
+                      style={{ height: `${heightPct}%`, background: color, opacity: 0.88 }}>
+                      {showVals && (
+                        <div className="bar-val" style={{ color }}>{val}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* STEP LOG */}
+            <div className={`step-log ${frame.phase}`}
+              style={frame.phase === "swap" ? { "--compare": "var(--swap)" } : {}}>
+              {frame.msg || "Press ▶ RUN to start."}
+            </div>
+
+            {/* PROGRESS */}
+            <div className="prog-wrap">
+              <div className="prog-fill" style={{
+                width: `${progress}%`,
+                background: `linear-gradient(90deg, ${algo.color}, var(--sorted))`
+              }} />
+            </div>
+
+            {/* ARRAY STRIP (small arrays only) */}
+            {size <= 30 && (
+              <div className="array-strip" style={{ marginTop: 12 }}>
+                {(frame.arr || array).map((val, i) => {
+                  const isSorted = frame.sorted && frame.sorted.includes(i);
+                  const isCmp = frame.comparing && frame.comparing.includes(i);
+                  const isSwap = isCmp && frame.phase === "swap";
+                  const isPivot = frame.pivot === i;
+                  return (
+                    <div key={i} className={`arr-cell ${isPivot ? "pvt" : isSorted ? "srt" : isSwap ? "swp" : isCmp ? "cmp" : ""}`}>
+                      {val}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ALGORITHM DESCRIPTION */}
+            <div style={{
+              marginTop: 16,
+              background: "var(--panel)", border: "1px solid var(--border)",
+              borderRadius: 10, padding: "16px 20px",
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px"
+            }}>
+              {[
+                { bubble: "Repeatedly compare adjacent elements and swap if out of order. Largest values 'bubble' to the end each pass.", selection: "Find the minimum in the unsorted portion, swap it to the front. Simple but always O(n²) comparisons.", insertion: "Build a sorted portion one element at a time, inserting each new element into its correct position.", merge: "Divide array in half recursively, sort each half, then merge sorted halves together. Guaranteed O(n log n).", quick: "Choose a pivot, partition elements around it, recursively sort each partition. Fastest in practice.", heap: "Build a max-heap, then repeatedly extract the maximum to the sorted end. O(n log n) worst case.", shell: "Generalization of insertion sort using gap sequences. Faster by sorting elements far apart first.", radix: "Sort by individual digits from least to most significant. Faster than comparison sorts for integers." }[algoKey],
+              ].map((desc, i) => (
+                <div key={i} style={{ gridColumn: "1 / -1", fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: "var(--muted2)", lineHeight: 1.7 }}>
+                  {desc}
+                </div>
+              ))}
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11 }}>
+                <span style={{ color: "var(--muted)" }}>Best: </span>
+                <span style={{ color: "var(--sorted)" }}>{algo.best}</span>
+              </div>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11 }}>
+                <span style={{ color: "var(--muted)" }}>Worst: </span>
+                <span style={{ color: algo.worst.includes("n²") ? "var(--swap)" : "var(--sorted)" }}>{algo.worst}</span>
+              </div>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11 }}>
+                <span style={{ color: "var(--muted)" }}>In-place: </span>
+                <span style={{ color: algo.space === "O(1)" || algo.space === "O(log n)" ? "var(--sorted)" : "var(--compare)" }}>
+                  {algo.space === "O(1)" || algo.space === "O(log n)" ? "Yes (" + algo.space + ")" : "No (" + algo.space + ")"}
+                </span>
+              </div>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11 }}>
+                <span style={{ color: "var(--muted)" }}>Stable: </span>
+                <span style={{ color: algo.stable === "Yes" ? "var(--sorted)" : "var(--compare)" }}>{algo.stable}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

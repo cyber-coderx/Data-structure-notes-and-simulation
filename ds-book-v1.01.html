@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Complete Coding Book v1.01 — Fundamentals · OOP · Data Structures</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{background:#09090e}</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+
+// ============================================================
+// GLOBAL STYLES
+// ============================================================
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Outfit:wght@300;400;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #09090e;
+    --surface: #111118;
+    --surface2: #18181f;
+    --surface3: #1e1e28;
+    --border: #252535;
+    --border2: #2e2e42;
+    --accent: #e8a87c;
+    --accent2: #7cbbe8;
+    --accent3: #a87ce8;
+    --accent4: #7ce8b4;
+    --accent5: #e87ca8;
+    --text: #ededf5;
+    --muted: #5c5c78;
+    --muted2: #8888a8;
+    --node-bg: #16161e;
+  }
+
+  html, body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .book-wrap { display: flex; min-height: 100vh; max-width: 1440px; margin: 0 auto; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 272px; min-width: 272px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto; padding: 0;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    display: flex; flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 28px 22px 22px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(160deg, rgba(232,168,124,0.08) 0%, transparent 100%);
+  }
+
+  .sidebar-version {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .sidebar-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px; font-weight: 900;
+    color: var(--text); line-height: 1.2;
+  }
+
+  .sidebar-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--muted); margin-top: 4px;
+  }
+
+  .sidebar-progress {
+    padding: 12px 22px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--muted);
+  }
+
+  .progress-bar {
+    height: 3px; background: var(--border2); border-radius: 2px;
+    margin-top: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+
+  .nav-section { padding: 16px 0 8px; }
+
+  .nav-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); padding: 0 22px 8px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 22px; cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.18s;
+    font-size: 13px; color: var(--muted2);
+    font-family: 'Outfit', sans-serif; font-weight: 400;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(232,168,124,0.05); }
+  .nav-item.active {
+    color: var(--accent); border-left-color: var(--accent);
+    background: rgba(232,168,124,0.08); font-weight: 600;
+  }
+  .nav-item .ch-num {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--muted); min-width: 22px;
+  }
+  .nav-item.active .ch-num { color: var(--accent); }
+
+  /* MAIN */
+  .main { flex: 1; overflow-y: auto; min-width: 0; }
+
+  /* HERO */
+  .chapter-hero {
+    padding: 64px 64px 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    background: var(--surface);
+  }
+
+  .chapter-hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 90% 50%, rgba(232,168,124,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .hero-chapter-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--accent); text-transform: uppercase;
+  }
+
+  .hero-section-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 1px;
+    padding: 3px 10px; border-radius: 20px;
+    background: rgba(232,168,124,0.12);
+    border: 1px solid rgba(232,168,124,0.25);
+    color: var(--accent);
+  }
+
+  .chapter-hero h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 46px; font-weight: 900;
+    line-height: 1.05; letter-spacing: -1.5px;
+    color: var(--text); margin-bottom: 18px;
+    position: relative; z-index: 1;
+  }
+
+  .chapter-hero p {
+    font-size: 16px; color: var(--muted2);
+    max-width: 520px; line-height: 1.75;
+    font-weight: 300; position: relative; z-index: 1;
+  }
+
+  .hero-big-num {
+    position: absolute; right: 48px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Fraunces', serif;
+    font-size: 140px; font-weight: 900;
+    color: rgba(232,168,124,0.05);
+    line-height: 1; pointer-events: none;
+    letter-spacing: -4px;
+  }
+
+  /* BODY */
+  .chapter-body { padding: 48px 64px; }
+
+  .section { margin-bottom: 64px; }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 24px; font-weight: 700;
+    color: var(--text); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::before {
+    content: ''; display: block;
+    width: 3px; height: 24px;
+    background: var(--accent); border-radius: 2px; flex-shrink: 0;
+  }
+
+  .prose {
+    font-size: 15px; line-height: 1.85;
+    color: #b8b8d0; margin-bottom: 18px;
+    font-weight: 300;
+  }
+  .prose strong { color: var(--text); font-weight: 600; }
+  .prose em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+  /* VIZ BOX */
+  .viz-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin: 24px 0;
+    position: relative;
+  }
+
+  .viz-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 22px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .viz-label::before { content: '◆'; color: var(--accent4); font-size: 8px; }
+
+  /* CONTROLS */
+  .ctrl-row {
+    display: flex; gap: 8px; margin-top: 22px;
+    flex-wrap: wrap; align-items: center;
+  }
+
+  .btn {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 7px 15px; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--border2);
+    background: var(--surface3); color: var(--text);
+    transition: all 0.18s; letter-spacing: 0.5px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--accent); border-color: var(--accent);
+    color: #09090e; font-weight: 500;
+  }
+  .btn-primary:hover { background: #f0ba96; border-color: #f0ba96; color: #09090e; }
+
+  .step-msg {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--accent4); padding: 10px 14px;
+    background: rgba(124,232,180,0.07);
+    border: 1px solid rgba(124,232,180,0.18);
+    border-radius: 8px; margin-top: 14px; line-height: 1.7;
+  }
+
+  .step-dots { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--border2); cursor: pointer; transition: all 0.25s;
+  }
+  .dot.active { background: var(--accent); transform: scale(1.4); }
+  .dot.done { background: var(--accent4); }
+
+  /* CODE */
+  .code-block {
+    background: #080810; border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px;
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    line-height: 1.9; overflow-x: auto; margin: 14px 0;
+    tab-size: 2;
+  }
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .num { color: #f78c6c; }
+  .cm { color: #3d5060; font-style: italic; }
+  .cls { color: var(--accent); }
+  .op { color: var(--accent2); }
+  .prop { color: var(--accent4); }
+
+  /* TABLE */
+  .tbl {
+    width: 100%; border-collapse: collapse;
+    font-family: 'DM Mono', monospace; font-size: 12px; margin: 14px 0;
+  }
+  .tbl th {
+    padding: 9px 14px; text-align: left;
+    background: var(--surface3); border: 1px solid var(--border2);
+    color: var(--accent); font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .tbl td {
+    padding: 9px 14px; border: 1px solid var(--border);
+    color: var(--text); font-size: 12px;
+  }
+  .tbl tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; font-family: 'DM Mono', monospace;
+    font-size: 10px; padding: 2px 8px; border-radius: 4px; margin: 0 3px;
+  }
+  .bg { background: rgba(124,232,180,0.12); color: var(--accent4); border: 1px solid rgba(124,232,180,0.25); }
+  .by { background: rgba(232,168,124,0.12); color: var(--accent); border: 1px solid rgba(232,168,124,0.25); }
+  .br { background: rgba(232,124,168,0.12); color: var(--accent5); border: 1px solid rgba(232,124,168,0.25); }
+  .bb { background: rgba(124,187,232,0.12); color: var(--accent2); border: 1px solid rgba(124,187,232,0.25); }
+
+  /* INFO CARD */
+  .info-card {
+    background: rgba(168,124,232,0.07);
+    border: 1px solid rgba(168,124,232,0.22);
+    border-radius: 10px; padding: 16px 20px;
+    margin: 14px 0; font-size: 14px;
+    line-height: 1.75; color: #b8b8d0;
+  }
+  .info-card strong { color: var(--accent3); }
+
+  .tip-card {
+    background: rgba(124,232,180,0.06);
+    border: 1px solid rgba(124,232,180,0.2);
+    border-left: 3px solid var(--accent4);
+    border-radius: 8px; padding: 14px 18px;
+    margin: 14px 0; font-size: 13px; line-height: 1.75; color: #b8b8d0;
+  }
+  .tip-card strong { color: var(--accent4); }
+
+  /* GRID CARDS */
+  .card-grid { display: grid; gap: 12px; margin: 16px 0; }
+  .card-grid-2 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card-grid-3 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+  .feature-card {
+    background: var(--surface3); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 18px;
+  }
+  .feature-card .fc-icon { font-size: 22px; margin-bottom: 10px; }
+  .feature-card .fc-title { font-weight: 700; color: var(--text); font-size: 14px; margin-bottom: 6px; }
+  .feature-card .fc-desc { font-size: 13px; color: var(--muted2); line-height: 1.65; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    padding: 24px 64px 40px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .chapter-hero { padding: 36px 24px 28px; }
+    .hero-big-num { display: none; }
+    .chapter-hero h2 { font-size: 32px; }
+    .chapter-body { padding: 28px 24px; }
+    .bottom-nav { padding: 20px 24px 32px; }
+  }
+`;
+
+// ============================================================
+// SHARED UTILS
+// ============================================================
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function StepViz({ steps, children }) {
+  const [step, setStep] = useState(0);
+  return (
+    <div>
+      {children(steps[step], step)}
+      <div className="step-msg">{steps[step].msg}</div>
+      <div className="ctrl-row">
+        <button className="btn" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Prev</button>
+        <button className="btn btn-primary" onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}>Next →</button>
+        <button className="btn" onClick={() => setStep(0)}>↺ Reset</button>
+        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--muted)", marginLeft: 8 }}>
+          {step + 1} / {steps.length}
+        </span>
+      </div>
+      <div className="step-dots">
+        {steps.map((_, i) => (
+          <div key={i} className={`dot ${i === step ? "active" : i < step ? "done" : ""}`}
+            onClick={() => setStep(i)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ===  PROGRAMMING FUNDAMENTALS VISUALIZATIONS  ===
+// ============================================================
+
+// --- Variables & Types Viz ---
+function VariablesViz() {
+  const steps = [
+    {
+      vars: [],
+      msg: "Memory starts empty. A variable is a named box in memory that holds a value."
+    },
+    {
+      vars: [{ name: "age", type: "int", value: "25", addr: "0x1A04", color: "#e8a87c" }],
+      msg: "int age = 25; — Declares an integer. Box labeled 'age', 4 bytes, holds the number 25."
+    },
+    {
+      vars: [
+        { name: "age", type: "int", value: "25", addr: "0x1A04", color: "#e8a87c" },
+        { name: "price", type: "float", value: "9.99", addr: "0x1A08", color: "#7cbbe8" }
+      ],
+      msg: "float price = 9.99; — A floating-point number. 4 bytes, stores decimals with IEEE-754 encoding."
+    },
+    {
+      vars: [
+        { name: "age", type: "int", value: "25", addr: "0x1A04", color: "#e8a87c" },
+        { name: "price", type: "float", value: "9.99", addr: "0x1A08", color: "#7cbbe8" },
+        { name: "name", type: "string", value: '"Alice"', addr: "0x1A0C", color: "#a87ce8" }
+      ],
+      msg: 'string name = "Alice"; — A string is a sequence of characters. Stored as pointer to char array on the heap.'
+    },
+    {
+      vars: [
+        { name: "age", type: "int", value: "25", addr: "0x1A04", color: "#e8a87c" },
+        { name: "price", type: "float", value: "9.99", addr: "0x1A08", color: "#7cbbe8" },
+        { name: "name", type: "string", value: '"Alice"', addr: "0x1A0C", color: "#a87ce8" },
+        { name: "isActive", type: "bool", value: "true", addr: "0x1A10", color: "#7ce8b4" }
+      ],
+      msg: "bool isActive = true; — Boolean: 1 bit of meaning, typically 1 byte stored. Only true or false."
+    },
+    {
+      vars: [
+        { name: "age", type: "int", value: "26", addr: "0x1A04", color: "#e8a87c", changed: true },
+        { name: "price", type: "float", value: "9.99", addr: "0x1A08", color: "#7cbbe8" },
+        { name: "name", type: "string", value: '"Alice"', addr: "0x1A0C", color: "#a87ce8" },
+        { name: "isActive", type: "bool", value: "true", addr: "0x1A10", color: "#7ce8b4" }
+      ],
+      msg: "age = 26; — Reassignment! The old value (25) is overwritten in the SAME memory address 0x1A04."
+    },
+  ];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ minHeight: 180 }}>
+          <svg width="100%" viewBox="0 0 620 160" style={{ display: "block" }}>
+            {/* Stack frame */}
+            <rect x={10} y={10} width={600} height={140} rx={8}
+              fill="rgba(0,0,0,0.25)" stroke="var(--border2)" strokeWidth={1} strokeDasharray="4,3" />
+            <text x={22} y={26} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace" letterSpacing={1}>STACK FRAME — main()</text>
+
+            {cur.vars.map((v, i) => (
+              <g key={v.name} style={{ transition: "all 0.4s" }}>
+                {/* Address */}
+                <text x={30 + i * 142} y={45} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">{v.addr}</text>
+                {/* Box */}
+                <rect x={20 + i * 142} y={50} width={120} height={72} rx={8}
+                  fill={v.changed ? `${v.color}28` : `${v.color}12`}
+                  stroke={v.color} strokeWidth={v.changed ? 2.5 : 1.5} />
+                {/* Type label */}
+                <text x={80 + i * 142} y={68} textAnchor="middle" fontSize={9}
+                  fill={v.color} fontFamily="DM Mono,monospace" opacity={0.7}>{v.type}</text>
+                {/* Value */}
+                <text x={80 + i * 142} y={92} textAnchor="middle" fontSize={16}
+                  fontWeight="700" fill={v.changed ? v.color : "var(--text)"}
+                  fontFamily="DM Mono,monospace">{v.value}</text>
+                {/* Name */}
+                <text x={80 + i * 142} y={112} textAnchor="middle" fontSize={11}
+                  fill={v.color} fontFamily="Outfit,sans-serif" fontWeight={600}>{v.name}</text>
+                {/* Changed badge */}
+                {v.changed && (
+                  <text x={80 + i * 142} y={132} textAnchor="middle" fontSize={9}
+                    fill={v.color} fontFamily="DM Mono,monospace">← updated!</text>
+                )}
+              </g>
+            ))}
+
+            {cur.vars.length === 0 && (
+              <text x={310} y={90} textAnchor="middle" fontSize={13} fill="var(--muted)"
+                fontFamily="DM Mono,monospace">[ empty — no variables declared yet ]</text>
+            )}
+          </svg>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Operators Viz ---
+function OperatorsViz() {
+  const steps = [
+    { a: 10, b: 3, op: null, result: null, highlight: "", msg: "We have two variables: a = 10, b = 3. Let's apply operators step by step." },
+    { a: 10, b: 3, op: "+", result: 13, highlight: "arith", msg: "a + b = 13. Addition: combines two values into their sum." },
+    { a: 10, b: 3, op: "-", result: 7, highlight: "arith", msg: "a - b = 7. Subtraction: difference between values." },
+    { a: 10, b: 3, op: "*", result: 30, highlight: "arith", msg: "a * b = 30. Multiplication: repeated addition." },
+    { a: 10, b: 3, op: "/", result: "3.33", highlight: "arith", msg: "a / b = 3.33. Division: how many times b fits into a." },
+    { a: 10, b: 3, op: "%", result: 1, highlight: "arith", msg: "a % b = 1. Modulo: the REMAINDER after division. 10 = 3×3 + 1." },
+    { a: 10, b: 3, op: ">", result: "true", highlight: "compare", msg: "a > b → true. Comparison operators return boolean values." },
+    { a: 10, b: 3, op: "==", result: "false", highlight: "compare", msg: "a == b → false. Equality check: are both values identical?" },
+    { a: 10, b: 3, op: "&&", result: "true && false = false", highlight: "logical", msg: "true && false → false. Logical AND: BOTH sides must be true." },
+    { a: 10, b: 3, op: "||", result: "true || false = true", highlight: "logical", msg: "true || false → true. Logical OR: at least ONE side must be true." },
+  ];
+
+  const opColor = { arith: "#e8a87c", compare: "#7cbbe8", logical: "#a87ce8" };
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <svg width="100%" viewBox="0 0 580 130" style={{ display: "block" }}>
+          {/* a box */}
+          <rect x={20} y={30} width={90} height={70} rx={10}
+            fill="rgba(232,168,124,0.12)" stroke="#e8a87c" strokeWidth={1.5} />
+          <text x={65} y={52} textAnchor="middle" fontSize={9} fill="#e8a87c" fontFamily="DM Mono,monospace">int</text>
+          <text x={65} y={77} textAnchor="middle" fontSize={26} fontWeight={700}
+            fill="var(--text)" fontFamily="DM Mono,monospace">{cur.a}</text>
+          <text x={65} y={96} textAnchor="middle" fontSize={12} fill="#e8a87c" fontFamily="Outfit,sans-serif" fontWeight={600}>a</text>
+
+          {/* Operator */}
+          <rect x={145} y={42} width={70} height={46} rx={8}
+            fill={cur.op ? `${opColor[cur.highlight] || "#555"}22` : "var(--surface3)"}
+            stroke={cur.op ? opColor[cur.highlight] || "#555" : "var(--border2)"} strokeWidth={cur.op ? 2 : 1} />
+          <text x={180} y={73} textAnchor="middle" fontSize={22} fontWeight={700}
+            fill={cur.op ? opColor[cur.highlight] : "var(--muted)"}
+            fontFamily="DM Mono,monospace">{cur.op || "?"}</text>
+
+          {/* b box */}
+          <rect x={248} y={30} width={90} height={70} rx={10}
+            fill="rgba(124,187,232,0.12)" stroke="#7cbbe8" strokeWidth={1.5} />
+          <text x={293} y={52} textAnchor="middle" fontSize={9} fill="#7cbbe8" fontFamily="DM Mono,monospace">int</text>
+          <text x={293} y={77} textAnchor="middle" fontSize={26} fontWeight={700}
+            fill="var(--text)" fontFamily="DM Mono,monospace">{cur.b}</text>
+          <text x={293} y={96} textAnchor="middle" fontSize={12} fill="#7cbbe8" fontFamily="Outfit,sans-serif" fontWeight={600}>b</text>
+
+          {/* = */}
+          {cur.result !== null && (
+            <>
+              <text x={365} y={73} textAnchor="middle" fontSize={22} fontWeight={700}
+                fill="var(--muted)" fontFamily="DM Mono,monospace">=</text>
+              <rect x={385} y={30} width={175} height={70} rx={10}
+                fill={`${opColor[cur.highlight] || "#7ce8b4"}18`}
+                stroke={opColor[cur.highlight] || "#7ce8b4"} strokeWidth={2} />
+              <text x={472} y={74} textAnchor="middle" fontSize={20} fontWeight={700}
+                fill={opColor[cur.highlight] || "#7ce8b4"}
+                fontFamily="DM Mono,monospace">{String(cur.result)}</text>
+            </>
+          )}
+
+          {/* category label */}
+          {cur.highlight && (
+            <text x={180} y={110} textAnchor="middle" fontSize={9}
+              fill={opColor[cur.highlight]} fontFamily="DM Mono,monospace" letterSpacing={1}>
+              {cur.highlight === "arith" ? "ARITHMETIC" : cur.highlight === "compare" ? "COMPARISON" : "LOGICAL"}
+            </text>
+          )}
+        </svg>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Control Flow Viz ---
+function ControlFlowViz() {
+  const steps = [
+    { active: "start", grade: 85, msg: "Program starts. We have grade = 85. About to enter a series of if/else checks." },
+    { active: "if1", grade: 85, msg: "if (grade >= 90) → 85 >= 90? FALSE. Condition not met, skip this branch." },
+    { active: "elif1", grade: 85, msg: "else if (grade >= 80) → 85 >= 80? TRUE! Enter this branch." },
+    { active: "body1", grade: 85, result: "B", msg: 'Execute: print("Grade: B"). This block runs because the condition was true.' },
+    { active: "done", grade: 85, result: "B", msg: 'All other else branches are SKIPPED. Output: "Grade: B". Program continues.' },
+  ];
+
+  const nodeStyle = (id, active, color) => ({
+    fill: active === id ? `${color}28` : "var(--node-bg)",
+    stroke: active === id ? color : "var(--border2)",
+    strokeWidth: active === id ? 2.5 : 1,
+  });
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <svg width="100%" viewBox="0 0 560 300" style={{ display: "block" }}>
+          {/* Connectors */}
+          <line x1={100} y1={50} x2={100} y2={78} stroke="var(--border2)" strokeWidth={1.5} />
+          <line x1={100} y1={108} x2={100} y2={138} stroke="var(--border2)" strokeWidth={1.5} />
+          <line x1={210} y1={155} x2={280} y2={155} stroke="var(--border2)" strokeWidth={1.5} strokeDasharray="4,3" />
+          <text x={248} y={148} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">FALSE</text>
+          <line x1={100} y1={172} x2={100} y2={202} stroke="var(--border2)" strokeWidth={1.5} />
+          <line x1={210} y1={219} x2={280} y2={219} stroke="var(--border2)" strokeWidth={1.5} strokeDasharray="4,3" />
+          <text x={248} y={212} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">FALSE</text>
+          <line x1={100} y1={236} x2={100} y2={268} stroke="var(--border2)" strokeWidth={1.5} />
+
+          {/* START */}
+          <rect x={30} y={20} width={140} height={30} rx={15}
+            fill="rgba(232,168,124,0.15)" stroke="var(--accent)" strokeWidth={1.5} />
+          <text x={100} y={39} textAnchor="middle" fontSize={12} fill="var(--accent)"
+            fontFamily="DM Mono,monospace">grade = 85</text>
+
+          {/* if grade >= 90 */}
+          <polygon points="100,78 170,108 100,138 30,108"
+            {...nodeStyle("if1", cur.active, "#7cbbe8")} />
+          <text x={100} y={104} textAnchor="middle" fontSize={11} fill={cur.active === "if1" ? "#7cbbe8" : "var(--text)"}
+            fontFamily="DM Mono,monospace">grade ≥ 90?</text>
+          <text x={60} y={125} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">FALSE</text>
+          <text x={112} y={90} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">TRUE→</text>
+          {/* A result (not taken) */}
+          <rect x={295} y={88} width={100} height={28} rx={6}
+            fill="rgba(124,187,232,0.08)" stroke="var(--border2)" strokeWidth={1} />
+          <text x={345} y={106} textAnchor="middle" fontSize={11} fill="var(--muted2)"
+            fontFamily="DM Mono,monospace">print "A"</text>
+
+          {/* else if grade >= 80 */}
+          <polygon points="100,138 170,168 100,198 30,168"
+            {...nodeStyle("elif1", cur.active, "#e8a87c")} />
+          <text x={100} y={164} textAnchor="middle" fontSize={11}
+            fill={cur.active === "elif1" ? "var(--accent)" : "var(--text)"}
+            fontFamily="DM Mono,monospace">grade ≥ 80?</text>
+          <text x={112} y={152} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">TRUE→</text>
+
+          {/* B result — TAKEN */}
+          <rect x={295} y={152} width={100} height={28} rx={6}
+            fill={cur.active === "body1" || cur.result ? "rgba(232,168,124,0.2)" : "rgba(232,168,124,0.06)"}
+            stroke={cur.result ? "var(--accent)" : "var(--border2)"}
+            strokeWidth={cur.result ? 2 : 1} />
+          <text x={345} y={170} textAnchor="middle" fontSize={11}
+            fill={cur.result ? "var(--accent)" : "var(--muted2)"}
+            fontFamily="DM Mono,monospace">print "B" ✓</text>
+
+          {/* else (C or below) */}
+          <rect x={30} y={202} width={140} height={34} rx={6}
+            {...nodeStyle("else", cur.active, "#a87ce8")} />
+          <text x={100} y={223} textAnchor="middle" fontSize={11}
+            fill={cur.active === "else" ? "#a87ce8" : "var(--muted2)"}
+            fontFamily="DM Mono,monospace">else → "C or lower"</text>
+
+          {/* C result */}
+          <rect x={295} y={208} width={100} height={28} rx={6}
+            fill="rgba(168,124,232,0.06)" stroke="var(--border2)" strokeWidth={1} />
+          <text x={345} y={226} textAnchor="middle" fontSize={11} fill="var(--muted2)"
+            fontFamily="DM Mono,monospace">print "C"</text>
+
+          {/* END */}
+          <rect x={30} y={268} width={140} height={26} rx={13}
+            fill={cur.active === "done" ? "rgba(124,232,180,0.2)" : "rgba(124,232,180,0.06)"}
+            stroke="var(--accent4)" strokeWidth={cur.active === "done" ? 2 : 1} />
+          <text x={100} y={284} textAnchor="middle" fontSize={11}
+            fill={cur.active === "done" ? "var(--accent4)" : "var(--muted2)"}
+            fontFamily="DM Mono,monospace">END</text>
+        </svg>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Loop Viz ---
+function LoopViz() {
+  const steps = [
+    { i: null, output: [], state: "init", msg: "for loop: for(int i = 0; i < 5; i++). Three parts: init, condition, increment." },
+    { i: 0, output: [], state: "check", msg: "INIT: i = 0. Now CHECK condition: i < 5 → 0 < 5 → TRUE. Enter loop body." },
+    { i: 0, output: ["i=0: ★"], state: "body", msg: "Execute body: print(i). Output so far: i=0. Then INCREMENT: i++." },
+    { i: 1, output: ["i=0: ★"], state: "check", msg: "CHECK: i < 5 → 1 < 5 → TRUE. Enter body again." },
+    { i: 1, output: ["i=0: ★", "i=1: ★★"], state: "body", msg: "Execute body again. i=1. Output grows. INCREMENT: i=2." },
+    { i: 2, output: ["i=0: ★", "i=1: ★★", "i=2: ★★★"], state: "body", msg: "i=2. Still true. Output continues growing. Each iteration adds another ★." },
+    { i: 3, output: ["i=0: ★", "i=1: ★★", "i=2: ★★★", "i=3: ★★★★"], state: "body", msg: "i=3. 4 stars. One more to go." },
+    { i: 4, output: ["i=0: ★", "i=1: ★★", "i=2: ★★★", "i=3: ★★★★", "i=4: ★★★★★"], state: "body", msg: "i=4. 5 stars. INCREMENT: i=5. Now CHECK again." },
+    { i: 5, output: ["i=0: ★", "i=1: ★★", "i=2: ★★★", "i=3: ★★★★", "i=4: ★★★★★"], state: "exit", msg: "CHECK: i < 5 → 5 < 5 → FALSE! Condition fails. EXIT the loop. Total: 5 iterations." },
+  ];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", minHeight: 180 }}>
+          {/* Loop state diagram */}
+          <svg width={260} height={180} style={{ flexShrink: 0 }}>
+            {/* Boxes */}
+            {[
+              { id: "init", label: "i = 0", x: 10, y: 20, color: "#e8a87c" },
+              { id: "check", label: "i < 5?", x: 90, y: 80, color: "#7cbbe8", diamond: true },
+              { id: "body", label: "print(i)", x: 10, y: 130, color: "#7ce8b4" },
+            ].map(n => (
+              <g key={n.id}>
+                {n.diamond ? (
+                  <polygon points={`${n.x + 60},${n.y} ${n.x + 110},${n.y + 26} ${n.x + 60},${n.y + 52} ${n.x + 10},${n.y + 26}`}
+                    fill={cur.state === n.id ? `${n.color}28` : "var(--node-bg)"}
+                    stroke={n.color} strokeWidth={cur.state === n.id ? 2.5 : 1} />
+                ) : (
+                  <rect x={n.x} y={n.y} width={120} height={34} rx={7}
+                    fill={cur.state === n.id ? `${n.color}28` : "var(--node-bg)"}
+                    stroke={n.color} strokeWidth={cur.state === n.id ? 2.5 : 1} />
+                )}
+                <text x={n.diamond ? n.x + 60 : n.x + 60} y={n.diamond ? n.y + 30 : n.y + 21}
+                  textAnchor="middle" fontSize={12} fontWeight={700}
+                  fill={cur.state === n.id ? n.color : "var(--text)"}
+                  fontFamily="DM Mono,monospace">{n.label}</text>
+              </g>
+            ))}
+            {/* Arrows */}
+            <line x1={70} y1={37} x2={140} y2={80} stroke="var(--border2)" strokeWidth={1.5} />
+            <line x1={100} y1={132} x2={100} y2={106} stroke="var(--border2)" strokeWidth={1.5} />
+            <path d="M 70,147 Q 30,147 30,107 L 30,37" stroke="#7ce8b4" strokeWidth={1.2} fill="none" strokeDasharray="4,3" />
+            <text x={14} y={95} fontSize={9} fill="var(--accent4)" fontFamily="DM Mono,monospace">i++</text>
+            {/* Exit arrow */}
+            <line x1={200} y1={106} x2={245} y2={106} stroke={cur.state === "exit" ? "#e87ca8" : "var(--border2)"} strokeWidth={1.5} />
+            <text x={210} y={98} fontSize={9} fill={cur.state === "exit" ? "#e87ca8" : "var(--muted)"} fontFamily="DM Mono,monospace">FALSE</text>
+            <text x={246} y={110} fontSize={10} fill={cur.state === "exit" ? "#e87ca8" : "var(--muted)"} fontFamily="DM Mono,monospace">EXIT</text>
+            {/* i counter */}
+            {cur.i !== null && (
+              <g>
+                <rect x={160} y={20} width={85} height={36} rx={7}
+                  fill="rgba(232,168,124,0.12)" stroke="var(--accent)" strokeWidth={1.5} />
+                <text x={202} y={34} textAnchor="middle" fontSize={9} fill="var(--accent)" fontFamily="DM Mono,monospace">i =</text>
+                <text x={202} y={50} textAnchor="middle" fontSize={16} fontWeight={700}
+                  fill={cur.state === "exit" ? "#e87ca8" : "var(--text)"}
+                  fontFamily="DM Mono,monospace">{cur.i}</text>
+              </g>
+            )}
+          </svg>
+          {/* Output panel */}
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted)", letterSpacing: 2, marginBottom: 10 }}>OUTPUT</div>
+            {cur.output.length === 0 && (
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--muted)" }}>(nothing yet)</div>
+            )}
+            {cur.output.map((line, i) => (
+              <div key={i} style={{
+                fontFamily: "'DM Mono',monospace", fontSize: 13,
+                color: i === cur.output.length - 1 ? "var(--accent4)" : "var(--muted2)",
+                padding: "3px 0",
+                fontWeight: i === cur.output.length - 1 ? 600 : 400
+              }}>{line}</div>
+            ))}
+          </div>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Functions Viz ---
+function FunctionsViz() {
+  const steps = [
+    { phase: "define", callStack: [], result: null, msg: "Define function: int add(int a, int b). This just stores the blueprint — doesn't run yet." },
+    { phase: "call", callStack: ["main()"], result: null, msg: "main() runs. Calls add(5, 3). A NEW stack frame is pushed for add()." },
+    { phase: "frame", callStack: ["main()", "add(a=5, b=3)"], result: null, msg: "add() frame created with local copies: a=5, b=3. These are SEPARATE from main's variables." },
+    { phase: "execute", callStack: ["main()", "add(a=5, b=3)"], result: 8, msg: "Execute: return a + b = 5 + 3 = 8. Return value computed." },
+    { phase: "return", callStack: ["main()"], result: 8, msg: "add() frame POPPED from stack. Value 8 returned to main(). add's local vars destroyed." },
+    { phase: "done", callStack: ["main()"], result: 8, stored: "sum = 8", msg: "main() stores result: int sum = add(5,3) = 8. Function call complete!" },
+  ];
+
+  const frameColors = ["#7ce8b4", "#e8a87c"];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap", minHeight: 200 }}>
+          {/* Call Stack */}
+          <div style={{ minWidth: 180 }}>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted)", letterSpacing: 2, marginBottom: 12 }}>CALL STACK</div>
+            <div style={{ display: "flex", flexDirection: "column-reverse", gap: 6 }}>
+              {cur.callStack.map((frame, i) => (
+                <div key={frame} style={{
+                  background: `${frameColors[i] || "#7c6af7"}15`,
+                  border: `1.5px solid ${frameColors[i] || "#7c6af7"}`,
+                  borderRadius: 8, padding: "10px 16px",
+                  fontFamily: "'DM Mono',monospace", fontSize: 13,
+                  color: frameColors[i] || "#7c6af7",
+                  fontWeight: i === cur.callStack.length - 1 ? 600 : 400
+                }}>
+                  {frame}
+                  {i === cur.callStack.length - 1 && (
+                    <span style={{ fontSize: 9, marginLeft: 8, opacity: 0.7 }}>← TOP</span>
+                  )}
+                </div>
+              ))}
+              {cur.callStack.length === 0 && (
+                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--muted)" }}>(empty)</div>
+              )}
+            </div>
+          </div>
+
+          {/* Function diagram */}
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted)", letterSpacing: 2, marginBottom: 12 }}>FUNCTION</div>
+            <svg width="100%" viewBox="0 0 300 160" style={{ display: "block" }}>
+              {/* Function box */}
+              <rect x={20} y={10} width={260} height={110} rx={10}
+                fill={cur.phase !== "define" ? "rgba(232,168,124,0.1)" : "rgba(255,255,255,0.02)"}
+                stroke={cur.phase !== "define" ? "var(--accent)" : "var(--border2)"}
+                strokeWidth={cur.phase !== "define" ? 2 : 1} />
+              <text x={150} y={32} textAnchor="middle" fontSize={11} fill="var(--accent)"
+                fontFamily="DM Mono,monospace" fontWeight={600}>int add(int a, int b)</text>
+              <line x1={30} y1={38} x2={270} y2={38} stroke="var(--border2)" strokeWidth={1} />
+              {/* Params */}
+              <rect x={35} y={46} width={56} height={30} rx={6}
+                fill={cur.phase === "frame" || cur.phase === "execute" ? "rgba(124,187,232,0.2)" : "rgba(255,255,255,0.03)"}
+                stroke={cur.phase === "frame" || cur.phase === "execute" ? "#7cbbe8" : "var(--border2)"} />
+              <text x={63} y={57} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">a</text>
+              <text x={63} y={70} textAnchor="middle" fontSize={14} fontWeight={700} fill={cur.phase === "frame" || cur.phase === "execute" ? "#7cbbe8" : "var(--muted2)"} fontFamily="DM Mono,monospace">5</text>
+              <rect x={100} y={46} width={56} height={30} rx={6}
+                fill={cur.phase === "frame" || cur.phase === "execute" ? "rgba(168,124,232,0.2)" : "rgba(255,255,255,0.03)"}
+                stroke={cur.phase === "frame" || cur.phase === "execute" ? "#a87ce8" : "var(--border2)"} />
+              <text x={128} y={57} textAnchor="middle" fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">b</text>
+              <text x={128} y={70} textAnchor="middle" fontSize={14} fontWeight={700} fill={cur.phase === "frame" || cur.phase === "execute" ? "#a87ce8" : "var(--muted2)"} fontFamily="DM Mono,monospace">3</text>
+
+              {/* return */}
+              <text x={175} y={55} fontSize={11} fill="var(--muted)" fontFamily="DM Mono,monospace">return</text>
+              <rect x={172} y={58} width={100} height={24} rx={5}
+                fill={cur.result !== null ? "rgba(124,232,180,0.2)" : "rgba(255,255,255,0.02)"}
+                stroke={cur.result !== null ? "var(--accent4)" : "var(--border2)"}
+                strokeWidth={cur.result !== null ? 2 : 1} />
+              <text x={222} y={74} textAnchor="middle" fontSize={12} fontWeight={700}
+                fill={cur.result !== null ? "var(--accent4)" : "var(--muted)"}
+                fontFamily="DM Mono,monospace">
+                {cur.result !== null ? `= ${cur.result}` : "a + b"}
+              </text>
+
+              {/* Stored */}
+              {cur.stored && (
+                <g>
+                  <text x={150} y={105} textAnchor="middle" fontSize={12} fontWeight={700}
+                    fill="var(--accent4)" fontFamily="DM Mono,monospace">sum = {cur.result} ✓</text>
+                </g>
+              )}
+            </svg>
+          </div>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+// --- OOP Classes Viz ---
+function OOPClassViz() {
+  const steps = [
+    { phase: "blueprint", instances: [], msg: "A CLASS is a blueprint. Like architectural drawings — no house exists yet, just the design." },
+    { phase: "blueprint", instances: [], msg: 'class Dog { string name; int age; void bark() { print("Woof!"); } } — Blueprint defined!' },
+    { phase: "create1", instances: [{ name: "Rex", age: 3, id: "dog1" }], msg: 'Dog rex = new Dog("Rex", 3); — First OBJECT instantiated from the blueprint. Memory allocated.' },
+    { phase: "create2", instances: [{ name: "Rex", age: 3, id: "dog1" }, { name: "Bella", age: 5, id: "dog2" }], msg: 'Dog bella = new Dog("Bella", 5); — Second OBJECT. Same blueprint, different data. Independent memory.' },
+    { phase: "method1", instances: [{ name: "Rex", age: 3, id: "dog1", barking: true }, { name: "Bella", age: 5, id: "dog2" }], msg: 'rex.bark() → "Woof!" — Calling a METHOD on rex. Only rex barks, not bella.' },
+    { phase: "field", instances: [{ name: "Rex", age: 4, id: "dog1" }, { name: "Bella", age: 5, id: "dog2" }], msg: "rex.age = 4; — Updating a FIELD. rex's age changes. bella's stays 5. Each object owns its own data." },
+  ];
+
+  const dogColor = ["#7cbbe8", "#a87ce8"];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ minHeight: 200 }}>
+          <svg width="100%" viewBox="0 0 600 200" style={{ display: "block" }}>
+            {/* Blueprint */}
+            <rect x={10} y={10} width={175} height={165} rx={10}
+              fill="rgba(232,168,124,0.07)" stroke="var(--accent)"
+              strokeWidth={1.5} strokeDasharray={cur.phase === "blueprint" ? "none" : "5,3"} />
+            <text x={97} y={28} textAnchor="middle" fontSize={10} fill="var(--accent)"
+              fontFamily="DM Mono,monospace" letterSpacing={1}>CLASS Dog</text>
+            <line x1={20} y1={33} x2={176} y2={33} stroke="var(--border2)" strokeWidth={1} />
+            {[
+              { label: "📦 FIELDS", items: ["name: string", "age: int", "breed: string"] },
+              { label: "⚙ METHODS", items: ["bark()", "fetch()", "sit()"] }
+            ].map((section, si) => (
+              <g key={si}>
+                <text x={24} y={52 + si * 72} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace" letterSpacing={1}>{section.label}</text>
+                {section.items.map((item, ii) => (
+                  <text key={ii} x={28} y={65 + si * 72 + ii * 16} fontSize={11}
+                    fill={cur.phase !== "blueprint" ? "var(--muted)" : "var(--text)"}
+                    fontFamily="DM Mono,monospace">{item}</text>
+                ))}
+              </g>
+            ))}
+            <text x={97} y={185} textAnchor="middle" fontSize={9} fill="var(--accent)"
+              fontFamily="DM Mono,monospace">[ BLUEPRINT ]</text>
+
+            {/* Arrow */}
+            {cur.instances.length > 0 && (
+              <>
+                <path d="M 188,95 L 215,95" stroke="var(--accent4)" strokeWidth={1.5} markerEnd="url(#inst-arr)" />
+                <text x={196} y={88} fontSize={9} fill="var(--accent4)" fontFamily="DM Mono,monospace">new</text>
+                <defs>
+                  <marker id="inst-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L8,3 z" fill="var(--accent4)" />
+                  </marker>
+                </defs>
+              </>
+            )}
+
+            {/* Instances */}
+            {cur.instances.map((inst, i) => {
+              const x = 220 + i * 192;
+              const col = dogColor[i];
+              const isBarking = inst.barking;
+              return (
+                <g key={inst.id}>
+                  <rect x={x} y={20} width={165} height={155} rx={10}
+                    fill={`${col}10`} stroke={col}
+                    strokeWidth={isBarking ? 3 : 1.5} />
+                  <text x={x + 82} y={38} textAnchor="middle" fontSize={10}
+                    fill={col} fontFamily="DM Mono,monospace" letterSpacing={1}>
+                    OBJECT: {inst.id}
+                  </text>
+                  <line x1={x + 10} y1={43} x2={x + 155} y2={43} stroke="var(--border2)" strokeWidth={1} />
+                  {[
+                    { k: "name", v: `"${inst.name}"` },
+                    { k: "age", v: String(inst.age) },
+                    { k: "breed", v: '"Labrador"' },
+                  ].map((field, fi) => (
+                    <g key={fi}>
+                      <text x={x + 16} y={62 + fi * 22} fontSize={11} fill="var(--muted2)" fontFamily="DM Mono,monospace">{field.k}:</text>
+                      <text x={x + 70} y={62 + fi * 22} fontSize={11} fontWeight={600}
+                        fill={fi === 1 && inst.age === 4 ? "var(--accent4)" : "var(--text)"}
+                        fontFamily="DM Mono,monospace">{field.v}</text>
+                    </g>
+                  ))}
+                  {isBarking && (
+                    <g>
+                      <rect x={x + 10} y={120} width={145} height={28} rx={6}
+                        fill="rgba(124,232,180,0.2)" stroke="var(--accent4)" strokeWidth={2} />
+                      <text x={x + 82} y={138} textAnchor="middle" fontSize={12} fill="var(--accent4)"
+                        fontFamily="DM Mono,monospace">bark() → "Woof!" 🐾</text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Encapsulation Viz ---
+function EncapsulationViz() {
+  const steps = [
+    { access: "none", balance: 1000, hackedTo: null, msg: "No encapsulation: balance is a public field. Anyone can read or write it directly." },
+    { access: "bad", balance: -9999, hackedTo: -9999, msg: 'Without protection: bankAccount.balance = -9999; — Direct field access! No validation. Balance corrupted!' },
+    { access: "protected", balance: 1000, msg: "With encapsulation: balance is PRIVATE. The field is hidden inside the class. Cannot be accessed directly from outside." },
+    { access: "getter", balance: 1000, showing: "getter", msg: "Public GETTER: getBalance() → returns 1000. Read-only access through a controlled method." },
+    { access: "setter-fail", balance: 1000, showing: "setter", attempt: -500, msg: "Public SETTER: deposit(-500) → Validation runs! Negative amount rejected. Balance stays 1000." },
+    { access: "setter-ok", balance: 1350, showing: "setter", attempt: 350, msg: "deposit(350) → Validation passes! 350 > 0. balance = 1000 + 350 = 1350. Safe update." },
+  ];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <svg width="100%" viewBox="0 0 580 210" style={{ display: "block" }}>
+          {/* Class box */}
+          <rect x={180} y={20} width={220} height={180} rx={12}
+            fill="var(--surface3)" stroke="var(--border2)" strokeWidth={1.5} />
+          <text x={290} y={40} textAnchor="middle" fontSize={11} fill="var(--accent)"
+            fontFamily="DM Mono,monospace" letterSpacing={1}>class BankAccount</text>
+          <line x1={190} y1={46} x2={390} y2={46} stroke="var(--border2)" strokeWidth={1} />
+
+          {/* Private field */}
+          <rect x={196} y={54} width={198} height={36} rx={7}
+            fill={cur.access === "bad" ? "rgba(232,124,168,0.2)" : cur.access === "none" ? "rgba(232,168,124,0.12)" : "rgba(168,124,232,0.12)"}
+            stroke={cur.access === "bad" ? "#e87ca8" : cur.access === "none" ? "var(--accent)" : "#a87ce8"}
+            strokeWidth={cur.access === "bad" || cur.access === "protected" ? 2.5 : 1.5} />
+          <text x={295} y={68} textAnchor="middle" fontSize={10} fill="var(--muted)" fontFamily="DM Mono,monospace">
+            {cur.access === "none" || cur.access === "bad" ? "PUBLIC" : "🔒 PRIVATE"}
+          </text>
+          <text x={295} y={83} textAnchor="middle" fontSize={14} fontWeight={700}
+            fill={cur.access === "bad" ? "#e87ca8" : cur.access === "none" ? "var(--accent)" : "#a87ce8"}
+            fontFamily="DM Mono,monospace">balance = {cur.access === "bad" ? cur.hackedTo : cur.balance}</text>
+
+          {/* Methods */}
+          <rect x={196} y={100} width={93} height={28} rx={6}
+            fill={cur.showing === "getter" ? "rgba(124,232,180,0.2)" : "rgba(255,255,255,0.03)"}
+            stroke={cur.showing === "getter" ? "var(--accent4)" : "var(--border2)"}
+            strokeWidth={cur.showing === "getter" ? 2 : 1} />
+          <text x={242} y={118} textAnchor="middle" fontSize={11} fill={cur.showing === "getter" ? "var(--accent4)" : "var(--muted2)"}
+            fontFamily="DM Mono,monospace">getBalance()</text>
+
+          <rect x={300} y={100} width={90} height={28} rx={6}
+            fill={cur.showing === "setter" ? "rgba(124,187,232,0.2)" : "rgba(255,255,255,0.03)"}
+            stroke={cur.showing === "setter" ? "#7cbbe8" : "var(--border2)"}
+            strokeWidth={cur.showing === "setter" ? 2 : 1} />
+          <text x={345} y={118} textAnchor="middle" fontSize={11} fill={cur.showing === "setter" ? "#7cbbe8" : "var(--muted2)"}
+            fontFamily="DM Mono,monospace">deposit(n)</text>
+
+          {/* Validation box */}
+          {cur.showing === "setter" && (
+            <g>
+              <rect x={196} y={136} width={198} height={40} rx={6}
+                fill={cur.access === "setter-fail" ? "rgba(232,124,168,0.15)" : "rgba(124,232,180,0.12)"}
+                stroke={cur.access === "setter-fail" ? "#e87ca8" : "var(--accent4)"}
+                strokeWidth={1.5} />
+              <text x={295} y={150} textAnchor="middle" fontSize={10} fill="var(--muted)"
+                fontFamily="DM Mono,monospace">if (n {">"} 0) balance += n</text>
+              <text x={295} y={165} textAnchor="middle" fontSize={11} fontWeight={700}
+                fill={cur.access === "setter-fail" ? "#e87ca8" : "var(--accent4)"}
+                fontFamily="DM Mono,monospace">
+                {cur.access === "setter-fail" ? `❌ ${cur.attempt} rejected` : `✓ +${cur.attempt} accepted`}
+              </text>
+            </g>
+          )}
+
+          {/* Outside world */}
+          <rect x={10} y={80} width={130} height={50} rx={8}
+            fill="rgba(232,124,168,0.06)" stroke={cur.access === "bad" ? "#e87ca8" : "var(--border)"} strokeWidth={cur.access === "bad" ? 2 : 1} />
+          <text x={75} y={100} textAnchor="middle" fontSize={11} fill="var(--muted2)" fontFamily="DM Mono,monospace">outside</text>
+          <text x={75} y={118} textAnchor="middle" fontSize={11}
+            fill={cur.access === "bad" ? "#e87ca8" : "var(--muted)"}
+            fontFamily="DM Mono,monospace">
+            {cur.access === "bad" ? "balance=-9999 ❌" : "code"}
+          </text>
+
+          {/* Arrow from outside */}
+          {cur.access === "bad" && (
+            <g>
+              <line x1={140} y1={105} x2={194} y2={70} stroke="#e87ca8" strokeWidth={2} strokeDasharray="4,2" />
+              <text x={148} y={88} fontSize={10} fill="#e87ca8" fontFamily="DM Mono,monospace">direct!</text>
+            </g>
+          )}
+          {(cur.showing === "getter" || cur.showing === "setter") && (
+            <g>
+              <line x1={140} y1={105} x2={194} y2={114} stroke="var(--accent4)" strokeWidth={1.5} />
+              <text x={145} y={100} fontSize={9} fill="var(--accent4)" fontFamily="DM Mono,monospace">method call</text>
+            </g>
+          )}
+
+          {/* Lock icon for protected */}
+          {(cur.access === "protected" || cur.access === "getter" || cur.access === "setter" || cur.access === "setter-fail" || cur.access === "setter-ok") && (
+            <text x={415} y={75} fontSize={28}>🔒</text>
+          )}
+        </svg>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Inheritance Viz ---
+function InheritanceViz() {
+  const steps = [
+    { level: 0, msg: "Start with an Animal base class — contains shared properties and behaviors all animals have." },
+    { level: 1, msg: "Dog and Cat INHERIT from Animal. They get name, age, eat() for free. No code duplication!" },
+    { level: 2, msg: "Dog adds its own: bark() and fetch(). Cat adds: purr() and scratch(). Specialized behavior on top of inherited." },
+    { level: 3, active: "dog", msg: 'Dog rex = new Dog("Rex"). rex.eat() → inherited from Animal! Works without redefinition.' },
+    { level: 3, active: "cat", msg: 'Cat.purr() → Cat-specific method. Only cats have this. Animal and Dog don\'t.' },
+    { level: 3, active: "override", msg: "OVERRIDE: Dog.makeSound() → 'Woof!'. Cat.makeSound() → 'Meow!'. Same method name, different behavior." },
+  ];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <svg width="100%" viewBox="0 0 560 250" style={{ display: "block" }}>
+          {/* Animal */}
+          {cur.level >= 0 && (
+            <g>
+              <rect x={180} y={10} width={200} height={68} rx={10}
+                fill="rgba(232,168,124,0.1)" stroke="var(--accent)" strokeWidth={2} />
+              <text x={280} y={30} textAnchor="middle" fontSize={11} fill="var(--accent)"
+                fontFamily="DM Mono,monospace" letterSpacing={1}>class Animal</text>
+              <text x={280} y={46} textAnchor="middle" fontSize={10} fill="var(--muted2)" fontFamily="DM Mono,monospace">name, age, breed</text>
+              <text x={280} y={62} textAnchor="middle" fontSize={10} fill="var(--muted2)" fontFamily="DM Mono,monospace">eat(), sleep(), makeSound()</text>
+            </g>
+          )}
+
+          {/* Inheritance arrows */}
+          {cur.level >= 1 && (
+            <>
+              <line x1={210} y1={78} x2={120} y2={128} stroke="var(--border2)" strokeWidth={1.5} />
+              <polygon points="117,132 122,122 128,130" fill="var(--border2)" />
+              <line x1={350} y1={78} x2={430} y2={128} stroke="var(--border2)" strokeWidth={1.5} />
+              <polygon points="427,132 432,122 437,130" fill="var(--border2)" />
+              <text x={145} y={108} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace" transform="rotate(-28,145,108)">extends</text>
+              <text x={360} y={108} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace" transform="rotate(28,360,108)">extends</text>
+            </>
+          )}
+
+          {/* Dog */}
+          {cur.level >= 1 && (
+            <g>
+              <rect x={30} y={128} width={175} height={80} rx={10}
+                fill={cur.active === "dog" || cur.active === "override" ? "rgba(124,187,232,0.15)" : "rgba(124,187,232,0.07)"}
+                stroke="#7cbbe8" strokeWidth={cur.active === "dog" || cur.active === "override" ? 2.5 : 1.5} />
+              <text x={117} y={146} textAnchor="middle" fontSize={11} fill="#7cbbe8"
+                fontFamily="DM Mono,monospace" letterSpacing={1}>class Dog</text>
+              <text x={117} y={162} textAnchor="middle" fontSize={9} fill="var(--muted)"
+                fontFamily="DM Mono,monospace">↑ inherits: name, eat()…</text>
+              {cur.level >= 2 && (
+                <>
+                  <text x={117} y={178} textAnchor="middle" fontSize={10} fill="var(--text)" fontFamily="DM Mono,monospace">bark(), fetch()</text>
+                  <text x={117} y={194} textAnchor="middle" fontSize={10}
+                    fill={cur.active === "override" ? "var(--accent4)" : "var(--muted2)"}
+                    fontFamily="DM Mono,monospace" fontWeight={cur.active === "override" ? 700 : 400}>
+                    makeSound()→"Woof!" {cur.active === "override" ? "✓" : ""}
+                  </text>
+                </>
+              )}
+            </g>
+          )}
+
+          {/* Cat */}
+          {cur.level >= 1 && (
+            <g>
+              <rect x={355} y={128} width={175} height={80} rx={10}
+                fill={cur.active === "cat" || cur.active === "override" ? "rgba(168,124,232,0.15)" : "rgba(168,124,232,0.07)"}
+                stroke="#a87ce8" strokeWidth={cur.active === "cat" || cur.active === "override" ? 2.5 : 1.5} />
+              <text x={442} y={146} textAnchor="middle" fontSize={11} fill="#a87ce8"
+                fontFamily="DM Mono,monospace" letterSpacing={1}>class Cat</text>
+              <text x={442} y={162} textAnchor="middle" fontSize={9} fill="var(--muted)"
+                fontFamily="DM Mono,monospace">↑ inherits: name, eat()…</text>
+              {cur.level >= 2 && (
+                <>
+                  <text x={442} y={178} textAnchor="middle" fontSize={10} fill="var(--text)" fontFamily="DM Mono,monospace">purr(), scratch()</text>
+                  <text x={442} y={194} textAnchor="middle" fontSize={10}
+                    fill={cur.active === "override" ? "var(--accent4)" : "var(--muted2)"}
+                    fontFamily="DM Mono,monospace" fontWeight={cur.active === "override" ? 700 : 400}>
+                    makeSound()→"Meow!" {cur.active === "override" ? "✓" : ""}
+                  </text>
+                </>
+              )}
+            </g>
+          )}
+
+          {/* Instance objects at bottom */}
+          {cur.level >= 3 && (
+            <>
+              <rect x={30} y={218} width={175} height={28} rx={7}
+                fill={cur.active === "dog" ? "rgba(124,187,232,0.25)" : "rgba(255,255,255,0.03)"}
+                stroke={cur.active === "dog" ? "#7cbbe8" : "var(--border)"} strokeWidth={cur.active === "dog" ? 2 : 1} />
+              <text x={117} y={236} textAnchor="middle" fontSize={11} fill={cur.active === "dog" ? "#7cbbe8" : "var(--muted)"}
+                fontFamily="DM Mono,monospace">Dog rex = new Dog("Rex")</text>
+
+              <rect x={355} y={218} width={175} height={28} rx={7}
+                fill={cur.active === "cat" ? "rgba(168,124,232,0.25)" : "rgba(255,255,255,0.03)"}
+                stroke={cur.active === "cat" ? "#a87ce8" : "var(--border)"} strokeWidth={cur.active === "cat" ? 2 : 1} />
+              <text x={442} y={236} textAnchor="middle" fontSize={11} fill={cur.active === "cat" ? "#a87ce8" : "var(--muted)"}
+                fontFamily="DM Mono,monospace">Cat luna = new Cat("Luna")</text>
+            </>
+          )}
+        </svg>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Polymorphism Viz ---
+function PolymorphismViz() {
+  const animals = [
+    { type: "Dog", sound: "Woof!", color: "#7cbbe8", emoji: "🐕" },
+    { type: "Cat", sound: "Meow!", color: "#a87ce8", emoji: "🐈" },
+    { type: "Duck", sound: "Quack!", color: "#e8a87c", emoji: "🦆" },
+    { type: "Cow", sound: "Moo!", color: "#7ce8b4", emoji: "🐄" },
+  ];
+  const steps = [
+    { active: -1, showLoop: false, msg: "Polymorphism: one interface, many forms. We have Dog, Cat, Duck, Cow — all extend Animal." },
+    { active: -1, showLoop: true, msg: "We store ALL animals in one array: Animal[] zoo = { rex, luna, donald, bessie }. Possible because of inheritance." },
+    { active: 0, showLoop: true, msg: "zoo[0].makeSound() — runtime looks up the actual type: Dog. Calls Dog.makeSound() → 'Woof!'" },
+    { active: 1, showLoop: true, msg: "zoo[1].makeSound() — actual type: Cat. Calls Cat.makeSound() → 'Meow!'" },
+    { active: 2, showLoop: true, msg: "zoo[2].makeSound() — actual type: Duck. Calls Duck.makeSound() → 'Quack!'" },
+    { active: 3, showLoop: true, msg: "zoo[3].makeSound() — actual type: Cow. Calls Cow.makeSound() → 'Moo!' — Same call, 4 different behaviors!" },
+  ];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ minHeight: 200 }}>
+          <svg width="100%" viewBox="0 0 580 200" style={{ display: "block" }}>
+            {/* Loop code box */}
+            {cur.showLoop && (
+              <g>
+                <rect x={10} y={8} width={240} height={54} rx={8}
+                  fill="rgba(255,255,255,0.03)" stroke="var(--border2)" strokeWidth={1} />
+                <text x={22} y={26} fontSize={10} fill="var(--muted2)" fontFamily="DM Mono,monospace">
+                  <tspan fill="#c792ea">for </tspan>
+                  (Animal a : zoo) {"{"}
+                </text>
+                <text x={34} y={42} fontSize={10} fill="var(--muted2)" fontFamily="DM Mono,monospace">
+                  a.<tspan fill="#82aaff">makeSound</tspan>();
+                </text>
+                <text x={22} y={56} fontSize={10} fill="var(--muted2)" fontFamily="DM Mono,monospace">{"}"}</text>
+              </g>
+            )}
+
+            {/* Animal boxes */}
+            {animals.map((a, i) => {
+              const x = 10 + i * 140;
+              const y = cur.showLoop ? 78 : 40;
+              const isActive = cur.active === i;
+              return (
+                <g key={a.type}>
+                  <rect x={x} y={y} width={126} height={110} rx={10}
+                    fill={isActive ? `${a.color}20` : `${a.color}08`}
+                    stroke={a.color} strokeWidth={isActive ? 2.5 : 1} />
+                  <text x={x + 63} y={y + 20} textAnchor="middle" fontSize={22}>{a.emoji}</text>
+                  <text x={x + 63} y={y + 38} textAnchor="middle" fontSize={10}
+                    fill={a.color} fontFamily="DM Mono,monospace" letterSpacing={1}>{a.type}</text>
+                  <rect x={x + 8} y={y + 46} width={110} height={22} rx={5}
+                    fill={`${a.color}12`} stroke="var(--border)" strokeWidth={1} />
+                  <text x={x + 63} y={y + 61} textAnchor="middle" fontSize={10}
+                    fill="var(--muted2)" fontFamily="DM Mono,monospace">makeSound()</text>
+                  {isActive && (
+                    <g>
+                      <rect x={x + 4} y={y + 74} width={118} height={28} rx={6}
+                        fill={`${a.color}30`} stroke={a.color} strokeWidth={2} />
+                      <text x={x + 63} y={y + 91} textAnchor="middle" fontSize={13} fontWeight={700}
+                        fill={a.color} fontFamily="DM Mono,monospace">"{a.sound}"</text>
+                    </g>
+                  )}
+                  {/* Array index */}
+                  {cur.showLoop && (
+                    <text x={x + 63} y={y - 8} textAnchor="middle" fontSize={9}
+                      fill="var(--muted)" fontFamily="DM Mono,monospace">[{i}]</text>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+// --- Abstraction Viz ---
+function AbstractionViz() {
+  const steps = [
+    { level: "user", msg: "Abstraction hides complexity. User calls car.drive(). They don't need to know HOW it works." },
+    { level: "interface", msg: "The public INTERFACE: start(), accelerate(), brake(), stop(). Simple, clean contract." },
+    { level: "mid", msg: "Under the hood: Engine, Transmission, Brakes — each a complex object doing real work." },
+    { level: "deep", msg: "Deeper: Fuel injection, gear ratios, hydraulic pressure... All hidden from the driver." },
+    { level: "call", msg: "car.accelerate() → triggers Engine.injectFuel() + Transmission.upshift() automatically. You just pressed a pedal." },
+  ];
+
+  const layers = [
+    { label: "👤 User / Caller", detail: "car.drive(60)", color: "#7ce8b4", y: 20 },
+    { label: "📋 Public Interface", detail: "start() accelerate() brake() stop()", color: "#e8a87c", y: 80 },
+    { label: "⚙ Engine Layer", detail: "Fuel Injection · Pistons · Crankshaft", color: "#7cbbe8", y: 140 },
+    { label: "🔩 Hardware Layer", detail: "Valves · Spark plugs · Hydraulics", color: "#a87ce8", y: 200 },
+  ];
+
+  const levelActive = { user: 0, interface: 1, mid: 2, deep: 3, call: [0, 1, 2] };
+  const active = levelActive[steps.find((_, i) => steps[i]) ? steps[0].level : "user"];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => {
+        const curActive = levelActive[cur.level];
+        return (
+          <svg width="100%" viewBox="0 0 560 260" style={{ display: "block" }}>
+            {layers.map((layer, i) => {
+              const isActive = Array.isArray(curActive)
+                ? curActive.includes(i)
+                : curActive >= i;
+              return (
+                <g key={i}>
+                  <rect x={20} y={layer.y} width={520} height={52} rx={8}
+                    fill={isActive ? `${layer.color}12` : "rgba(255,255,255,0.02)"}
+                    stroke={isActive ? layer.color : "var(--border)"}
+                    strokeWidth={isActive ? 2 : 1} />
+                  <text x={36} y={layer.y + 20} fontSize={11} fontWeight={600}
+                    fill={isActive ? layer.color : "var(--muted)"}
+                    fontFamily="Outfit,sans-serif">{layer.label}</text>
+                  <text x={36} y={layer.y + 38} fontSize={11}
+                    fill={isActive ? "var(--text)" : "var(--muted)"}
+                    fontFamily="DM Mono,monospace">{layer.detail}</text>
+                  {i < layers.length - 1 && (
+                    <g>
+                      <line x1={280} y1={layer.y + 52} x2={280} y2={layer.y + 62} stroke="var(--border2)" strokeWidth={1.5} />
+                      <text x={290} y={layer.y + 60} fontSize={9} fill="var(--muted)" fontFamily="DM Mono,monospace">hidden ↓</text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+            {/* Call flow arrow */}
+            {cur.level === "call" && (
+              <g>
+                <path d="M 544,46 L 544,192" stroke="var(--accent4)" strokeWidth={2}
+                  strokeDasharray="6,3" markerEnd="url(#abs-arr)" />
+                <defs>
+                  <marker id="abs-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L8,3 z" fill="var(--accent4)" />
+                  </marker>
+                </defs>
+                <text x={546} y={126} fontSize={10} fill="var(--accent4)" fontFamily="DM Mono,monospace"
+                  transform="rotate(90,546,126)">call cascades →</text>
+              </g>
+            )}
+          </svg>
+        );
+      }}
+    </StepViz>
+  );
+}
+
+// ============================================================
+// === ORIGINAL DATA STRUCTURES VISUALIZATIONS ===
+// ============================================================
+
+function ArrayViz() {
+  const initialArr = [15, 8, 42, 3, 27, 11, 36, 19];
+  const steps = [
+    { arr: initialArr, highlight: [], msg: "Initial array in memory — elements stored in contiguous cells." },
+    { arr: initialArr, highlight: [0], msg: "Access arr[0] = 15. O(1) — direct: base_addr + 0×4 bytes." },
+    { arr: initialArr, highlight: [4], msg: "Access arr[4] = 27. O(1) — no traversal needed." },
+    { arr: [...initialArr.slice(0, 2), 99, ...initialArr.slice(3)], highlight: [2], msg: "Update arr[2] = 99. O(1) write directly to address." },
+    { arr: [99, ...initialArr.slice(0, 2), 99, ...initialArr.slice(3)], highlight: [0, 1, 2, 3, 4, 5, 6, 7, 8], msg: "Insert at front: all elements shift right. O(n) — expensive!" },
+    { arr: [...initialArr.slice(0, 2), 99, ...initialArr.slice(3), 55], highlight: [8], msg: "Append to end: O(1) — just write to next free slot." },
+  ];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ overflowX: "auto" }}>
+          <svg width={Math.max(580, cur.arr.length * 70)} height={130} style={{ display: "block" }}>
+            {cur.arr.map((val, i) => {
+              const hl = cur.highlight.includes(i);
+              return (
+                <g key={i}>
+                  <rect x={i * 68 + 8} y={14} width={58} height={12} rx={2}
+                    fill="rgba(0,0,0,0.3)" stroke="var(--border)" strokeWidth={1} />
+                  <text x={i * 68 + 37} y={24} textAnchor="middle" fontSize={8}
+                    fill="var(--muted)" fontFamily="DM Mono,monospace">0x{(0x1000 + i * 4).toString(16)}</text>
+                  <rect x={i * 68 + 8} y={30} width={58} height={56} rx={7}
+                    fill={hl ? "rgba(232,168,124,0.22)" : "var(--node-bg)"}
+                    stroke={hl ? "var(--accent)" : "var(--border2)"}
+                    strokeWidth={hl ? 2 : 1} />
+                  <text x={i * 68 + 37} y={65} textAnchor="middle" fontSize={20} fontWeight={700}
+                    fill={hl ? "var(--accent)" : "var(--text)"} fontFamily="DM Mono,monospace">{val}</text>
+                  <text x={i * 68 + 37} y={100} textAnchor="middle" fontSize={10}
+                    fill="var(--muted)" fontFamily="DM Mono,monospace">[{i}]</text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+function StackViz() {
+  const steps = [
+    { stack: [], op: "", msg: "Empty stack. LIFO — Last In, First Out. Think: a stack of plates." },
+    { stack: [10], op: "push", msg: "PUSH 10 → top of stack. O(1)." },
+    { stack: [10, 25], op: "push", msg: "PUSH 25 → stacked on top. O(1)." },
+    { stack: [10, 25, 7], op: "push", msg: "PUSH 7 → now the top. O(1)." },
+    { stack: [10, 25, 7, 43], op: "push", msg: "PUSH 43 → top is 43 now." },
+    { stack: [10, 25, 7], op: "pop", popped: 43, msg: "POP → removes 43 (top). O(1)." },
+    { stack: [10, 25], op: "pop", popped: 7, msg: "POP → removes 7. O(1)." },
+    { stack: [10, 25], op: "peek", msg: "PEEK → read top (25) without removing. O(1)." },
+  ];
+  const maxH = 5;
+  const cellH = 42, cellW = 110, x0 = 50;
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <svg width={220} height={260} style={{ flexShrink: 0 }}>
+            <rect x={x0} y={18} width={cellW} height={maxH * cellH + 10} rx={4}
+              fill="transparent" stroke="var(--border)" strokeWidth={1} strokeDasharray="4,3" />
+            <text x={x0 + cellW / 2} y={14} textAnchor="middle" fontSize={9}
+              fill="var(--muted)" fontFamily="DM Mono,monospace">STACK</text>
+            {Array.from({ length: maxH }).map((_, i) => (
+              <rect key={i} x={x0 + 2} y={22 + i * cellH} width={cellW - 4} height={cellH - 4} rx={4}
+                fill="rgba(0,0,0,0.15)" stroke="var(--surface3)" strokeWidth={1} />
+            ))}
+            {cur.stack.map((val, i) => {
+              const y = 22 + (maxH - 1 - i) * cellH;
+              const isTop = i === cur.stack.length - 1;
+              const col = isTop && cur.op === "peek" ? "var(--accent)" : isTop ? "#7cbbe8" : "var(--muted2)";
+              return (
+                <g key={i}>
+                  <rect x={x0 + 2} y={y} width={cellH - 4} height={cellH - 4} rx={4}
+                    fill={`${isTop ? "#7cbbe8" : "#5c5c78"}18`}
+                    stroke={col} strokeWidth={isTop ? 2 : 1} />
+                  <rect x={x0 + 2} y={y} width={cellW - 4} height={cellH - 4} rx={4}
+                    fill={`${isTop ? "#7cbbe8" : "#5c5c78"}12`}
+                    stroke={col} strokeWidth={isTop ? 2 : 1} />
+                  <text x={x0 + cellW / 2} y={y + 26} textAnchor="middle" fontSize={16} fontWeight={700}
+                    fill={col} fontFamily="DM Mono,monospace">{val}</text>
+                </g>
+              );
+            })}
+            {cur.stack.length > 0 && (
+              <text x={x0 + cellW + 8} y={22 + (maxH - cur.stack.length) * cellH + 26}
+                fontSize={10} fill="var(--accent4)" fontFamily="DM Mono,monospace">← TOP</text>
+            )}
+            {cur.op === "pop" && (
+              <g>
+                <rect x={x0 + 2} y={-8} width={cellW - 4} height={cellH - 4} rx={4}
+                  fill="rgba(232,124,168,0.2)" stroke="var(--accent5)" strokeWidth={2} />
+                <text x={x0 + cellW / 2} y={16} textAnchor="middle" fontSize={16} fontWeight={700}
+                  fill="var(--accent5)" fontFamily="DM Mono,monospace">{cur.popped}</text>
+                <text x={x0 + cellW / 2} y={-12} textAnchor="middle" fontSize={9}
+                  fill="var(--accent5)" fontFamily="DM Mono,monospace">POPPED ↑</text>
+              </g>
+            )}
+          </svg>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted)", letterSpacing: 2, marginBottom: 10 }}>OP LOG</div>
+            {steps.slice(0).map((s, i) => {
+              if (!s.op || i > steps.indexOf(steps.find(x => x === cur))) return null;
+              const col = s.op === "pop" ? "var(--accent5)" : s.op === "peek" ? "var(--accent)" : "var(--accent4)";
+              return (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "center" }}>
+                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, padding: "2px 7px", borderRadius: 4, background: `${col}15`, color: col, border: `1px solid ${col}40` }}>{s.op.toUpperCase()}</span>
+                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--muted2)" }}>
+                    {s.op === "pop" ? `returned ${s.popped}` : s.op === "peek" ? `reads ${s.stack[s.stack.length - 1]}` : `pushed ${s.stack[s.stack.length - 1]}`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </StepViz>
+  );
+}
+
+function BSTViz() {
+  const allNodes = {
+    50: { val: 50, x: 250, y: 40 }, 30: { val: 30, x: 140, y: 120 }, 70: { val: 70, x: 360, y: 120 },
+    20: { val: 20, x: 80, y: 200 }, 40: { val: 40, x: 200, y: 200 }, 60: { val: 60, x: 300, y: 200 }, 80: { val: 80, x: 420, y: 200 }
+  };
+  const steps = [
+    { visible: [50], highlight: [], path: [], msg: "Insert 50 — becomes root." },
+    { visible: [50, 30], highlight: [30], path: [50, 30], msg: "Insert 30. 30<50 → go LEFT." },
+    { visible: [50, 30, 70], highlight: [70], path: [50, 70], msg: "Insert 70. 70>50 → go RIGHT." },
+    { visible: [50, 30, 70, 20, 40, 60, 80], highlight: [], path: [], msg: "Insert remaining nodes following BST rules." },
+    { visible: [50, 30, 70, 20, 40, 60, 80], highlight: [50, 70, 60], path: [50, 70, 60], msg: "SEARCH 60: 60>50→right(70), 60<70→left(60). Found! O(log n)." },
+    { visible: [50, 30, 70, 20, 40, 60, 80], inorder: [20, 30, 40, 50, 60, 70, 80], highlight: [], path: [], msg: "IN-ORDER (L→N→R): 20,30,40,50,60,70,80. BST gives sorted output!" },
+  ];
+  const edges = [[50, 30], [50, 70], [30, 20], [30, 40], [70, 60], [70, 80]];
+
+  return (
+    <StepViz steps={steps}>
+      {(cur) => (
+        <svg width="100%" viewBox="0 0 500 270" style={{ display: "block" }}>
+          <defs>
+            <marker id="bst-a" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="var(--border2)" />
+            </marker>
+          </defs>
+          {edges.map(([f, t]) => {
+            if (!cur.visible.includes(f) || !cur.visible.includes(t)) return null;
+            const fn = allNodes[f], tn = allNodes[t];
+            const isP = cur.path.includes(f) && cur.path.includes(t);
+            return <line key={`${f}-${t}`} x1={fn.x} y1={fn.y + 18} x2={tn.x} y2={tn.y - 18}
+              stroke={isP ? "var(--accent)" : "var(--border2)"} strokeWidth={isP ? 2.5 : 1.5} />;
+          })}
+          {cur.visible.map(id => {
+            const n = allNodes[id];
+            const isH = cur.highlight.includes(id);
+            return (
+              <g key={id}>
+                <circle cx={n.x} cy={n.y} r={20} fill={isH ? "rgba(232,168,124,0.25)" : "var(--node-bg)"}
+                  stroke={isH ? "var(--accent)" : "var(--border2)"} strokeWidth={isH ? 2.5 : 1.5} />
+                <text x={n.x} y={n.y + 6} textAnchor="middle" fontSize={14} fontWeight={700}
+                  fill={isH ? "var(--accent)" : "var(--text)"} fontFamily="DM Mono,monospace">{n.val}</text>
+              </g>
+            );
+          })}
+          {cur.inorder && (
+            <g>
+              <text x={20} y={248} fontSize={10} fill="var(--accent4)" fontFamily="DM Mono,monospace">IN-ORDER: </text>
+              {cur.inorder.map((v, i) => (
+                <g key={i}>
+                  <rect x={105 + i * 48} y={234} width={42} height={22} rx={4}
+                    fill="rgba(124,232,180,0.12)" stroke="var(--accent4)" strokeWidth={1} />
+                  <text x={126 + i * 48} y={250} textAnchor="middle" fontSize={12} fill="var(--accent4)" fontFamily="DM Mono,monospace">{v}</text>
+                </g>
+              ))}
+            </g>
+          )}
+        </svg>
+      )}
+    </StepViz>
+  );
+}
+
+function SortingViz() {
+  const initial = [64, 34, 25, 12, 22, 11, 90];
+  const [arr, setArr] = useState([...initial]);
+  const [comparing, setComparing] = useState([]);
+  const [sorted, setSorted] = useState([]);
+  const [running, setRunning] = useState(false);
+  const [msg, setMsg] = useState("Press 'Run' to watch Bubble Sort animate step by step.");
+  const [swaps, setSwaps] = useState(0);
+  const stopRef = useRef(false);
+
+  const reset = () => {
+    stopRef.current = true;
+    setArr([...initial]); setComparing([]); setSorted([]);
+    setMsg("Press 'Run' to watch Bubble Sort animate step by step."); setSwaps(0); setRunning(false);
+  };
+
+  const run = async () => {
+    stopRef.current = false; setRunning(true); setSorted([]); setSwaps(0);
+    let a = [...initial]; setArr([...a]); let sw = 0;
+    for (let i = 0; i < a.length - 1; i++) {
+      for (let j = 0; j < a.length - i - 1; j++) {
+        if (stopRef.current) { setRunning(false); return; }
+        setComparing([j, j + 1]);
+        setMsg(`Pass ${i + 1}: comparing [${j}]=${a[j]} vs [${j + 1}]=${a[j + 1]}. ${a[j] > a[j + 1] ? "Swap!" : "No swap."}`);
+        await sleep(480);
+        if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; sw++; setArr([...a]); setSwaps(sw); await sleep(320); }
+      }
+      setSorted(p => [...p, a.length - 1 - i]);
+    }
+    setSorted([...Array(a.length).keys()]); setComparing([]);
+    setMsg(`✓ Sorted! ${sw} total swaps. O(n²) = ${initial.length * initial.length} max comparisons.`);
+    setRunning(false);
+  };
+
+  const maxV = Math.max(...arr);
+  return (
+    <div>
+      <svg width="100%" viewBox="0 0 520 190" style={{ display: "block" }}>
+        {arr.map((val, i) => {
+          const h = Math.round((val / maxV) * 140);
+          const x = 18 + i * 70;
+          const isCmp = comparing.includes(i);
+          const isSorted = sorted.includes(i);
+          const col = isSorted ? "var(--accent4)" : isCmp ? "var(--accent)" : "#7cbbe8";
+          return (
+            <g key={i}>
+              <rect x={x} y={155 - h} width={56} height={h} rx={4}
+                fill={`${col}22`} stroke={col} strokeWidth={isCmp ? 2.5 : 1.5}
+                style={{ transition: "all 0.3s" }} />
+              <text x={x + 28} y={172} textAnchor="middle" fontSize={13} fontWeight={700}
+                fill={col} fontFamily="DM Mono,monospace">{val}</text>
+              {isCmp && <text x={x + 28} y={150 - h} textAnchor="middle" fontSize={12} fill={col} fontFamily="DM Mono,monospace">↑</text>}
+            </g>
+          );
+        })}
+      </svg>
+      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>
+        Swaps: <span style={{ color: "var(--accent)" }}>{swaps}</span>
+      </div>
+      <div className="step-msg">{msg}</div>
+      <div className="ctrl-row">
+        <button className="btn btn-primary" onClick={run} disabled={running}>▶ Run Sort</button>
+        <button className="btn" onClick={reset}>↺ Reset</button>
+        {running && <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--muted)" }}>running…</span>}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ===  ALL CHAPTERS  ===
+// ============================================================
+
+// ---- PROGRAMMING FUNDAMENTALS ----
+
+function ChPFIntro() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P0</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part I · Chapter P0</span>
+          <span className="hero-section-badge">Programming Fundamentals</span>
+        </div>
+        <h2>What is Programming?</h2>
+        <p>Before writing your first line of code, understand what programming really is — and how computers understand instructions.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">The Core Idea</div>
+          <p className="prose">Programming is the act of giving a computer a precise sequence of instructions to solve a problem. A computer is incredibly fast but unbelievably literal — it does <em>exactly</em> what you tell it, nothing more.</p>
+          <p className="prose">A <strong>program</strong> is a set of instructions written in a programming language. The computer's CPU executes these instructions one at a time, billions of times per second.</p>
+          <div className="info-card">
+            <strong>The translation chain:</strong><br />
+            Your Code (Python/Java/C++) → Compiler/Interpreter → Machine Code (0s and 1s) → CPU Execution
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Programming Languages</div>
+          <p className="prose">Languages sit on a spectrum from low-level (close to hardware) to high-level (close to human language).</p>
+          <table className="tbl">
+            <thead><tr><th>Level</th><th>Language</th><th>Use Case</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td>Low</td><td>Assembly</td><td>OS kernels, embedded</td><td><code>MOV AX, 1</code></td></tr>
+              <tr><td>Mid</td><td>C, C++</td><td>Systems, games, performance</td><td><code>int x = 5;</code></td></tr>
+              <tr><td>High</td><td>Java, C#</td><td>Enterprise, Android</td><td><code>String s = "hi";</code></td></tr>
+              <tr><td>Very High</td><td>Python, Ruby</td><td>Data science, web, scripts</td><td><code>x = 5</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-title">The Compilation vs Interpretation Divide</div>
+          <div className="card-grid card-grid-2">
+            <div className="feature-card">
+              <div className="fc-icon">🔨</div>
+              <div className="fc-title">Compiled (C, C++, Go)</div>
+              <div className="fc-desc">Entire source code translated to machine code BEFORE running. Faster execution, less portable. Errors caught at compile time.</div>
+            </div>
+            <div className="feature-card">
+              <div className="fc-icon">▶</div>
+              <div className="fc-title">Interpreted (Python, JS)</div>
+              <div className="fc-desc">Translated line-by-line at runtime. More portable, easier to debug interactively. Slightly slower due to translation overhead.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChPFVariables() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P1</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part I · Chapter P1</span>
+          <span className="hero-section-badge">Programming Fundamentals</span>
+        </div>
+        <h2>Variables &amp; Data Types</h2>
+        <p>Variables are named containers in memory. Data types define what kind of value can be stored and how many bytes it occupies.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Variables as Memory Boxes</div>
+          <p className="prose">When you declare a variable, the computer reserves a region of memory, labels it with your chosen name, and stores your value there. The type determines the size and interpretation of those bytes.</p>
+          <div className="viz-box">
+            <div className="viz-label">Variable Declaration — Step by Step Memory Allocation</div>
+            <VariablesViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Primitive Data Types</div>
+          <table className="tbl">
+            <thead><tr><th>Type</th><th>Size</th><th>Range / Values</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td><span className="badge bb">int</span></td><td>4 bytes</td><td>−2,147,483,648 to 2,147,483,647</td><td>age = 25</td></tr>
+              <tr><td><span className="badge by">float</span></td><td>4 bytes</td><td>~7 decimal digits precision</td><td>pi = 3.14159</td></tr>
+              <tr><td><span className="badge by">double</span></td><td>8 bytes</td><td>~15 decimal digits precision</td><td>price = 9.99</td></tr>
+              <tr><td><span className="badge bg">bool</span></td><td>1 byte</td><td>true or false only</td><td>isActive = true</td></tr>
+              <tr><td><span className="badge bb">char</span></td><td>1 byte</td><td>Single character (ASCII 0–127)</td><td>grade = 'A'</td></tr>
+              <tr><td><span className="badge br">string</span></td><td>varies</td><td>Sequence of chars (heap)</td><td>name = "Alice"</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-title">Type System: Static vs Dynamic</div>
+          <div className="card-grid card-grid-2">
+            <div>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--accent2)", marginBottom: 8 }}>Static Typing (Java, C++)</div>
+              <div className="code-block">
+                <span className="kw">int</span> age = <span className="num">25</span>;{"\n"}
+                age = <span className="str">"hello"</span>; <span className="cm">// ❌ ERROR!</span>{"\n"}
+                <span className="cm">// Type mismatch caught at compile time</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--accent3)", marginBottom: 8 }}>Dynamic Typing (Python)</div>
+              <div className="code-block">
+                age = <span className="num">25</span>{"\n"}
+                age = <span className="str">"hello"</span>  <span className="cm"># ✓ Fine!</span>{"\n"}
+                <span className="cm"># Type checked at runtime</span>
+              </div>
+            </div>
+          </div>
+          <div className="tip-card">
+            <strong>Tip:</strong> Static typing catches more bugs early. Dynamic typing is faster to write. Modern languages like TypeScript and Python with type hints give you the best of both.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChPFOperators() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P2</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part I · Chapter P2</span>
+          <span className="hero-section-badge">Programming Fundamentals</span>
+        </div>
+        <h2>Operators &amp; Expressions</h2>
+        <p>Operators transform values. Expressions combine operators and operands to compute results.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">All Operator Types, Animated</div>
+          <p className="prose">Operators work on <em>operands</em> (values or variables) and produce a result. Different operator types serve different purposes — arithmetic, comparison, logical, and bitwise.</p>
+          <div className="viz-box">
+            <div className="viz-label">Operator Evaluation — Interactive</div>
+            <OperatorsViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Operator Precedence</div>
+          <p className="prose">Operators have a priority order — higher precedence evaluated first. Use parentheses to control evaluation order explicitly.</p>
+          <div className="code-block">
+            <span className="cm">// Without parentheses:</span>{"\n"}
+            result = <span className="num">2</span> <span className="op">+</span> <span className="num">3</span> <span className="op">*</span> <span className="num">4</span>    <span className="cm">// = 14 (not 20!). * before +</span>{"\n\n"}
+            <span className="cm">// With parentheses (explicit control):</span>{"\n"}
+            result = (<span className="num">2</span> <span className="op">+</span> <span className="num">3</span>) <span className="op">*</span> <span className="num">4</span>  <span className="cm">// = 20. () evaluated first</span>{"\n\n"}
+            <span className="cm">// Logical operators: && before ||</span>{"\n"}
+            x = <span className="kw">true</span> <span className="op">||</span> <span className="kw">false</span> <span className="op">&&</span> <span className="kw">false</span>  <span className="cm">// = true (&&  runs first)</span>
+          </div>
+          <table className="tbl">
+            <thead><tr><th>Precedence</th><th>Operators</th><th>Direction</th></tr></thead>
+            <tbody>
+              <tr><td>1 (highest)</td><td>() [] .</td><td>Left → Right</td></tr>
+              <tr><td>2</td><td>! ++ -- (unary)</td><td>Right → Left</td></tr>
+              <tr><td>3</td><td>* / %</td><td>Left → Right</td></tr>
+              <tr><td>4</td><td>+ -</td><td>Left → Right</td></tr>
+              <tr><td>5</td><td>{"< > <= >="}</td><td>Left → Right</td></tr>
+              <tr><td>6</td><td>== !=</td><td>Left → Right</td></tr>
+              <tr><td>7</td><td>&amp;&amp;</td><td>Left → Right</td></tr>
+              <tr><td>8 (lowest)</td><td>||</td><td>Left → Right</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChPFControlFlow() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P3</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part I · Chapter P3</span>
+          <span className="hero-section-badge">Programming Fundamentals</span>
+        </div>
+        <h2>Control Flow</h2>
+        <p>Programs don't always run top-to-bottom. Conditionals and loops let you branch and repeat based on data.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">if / else if / else — Flow Diagram</div>
+          <p className="prose">Conditional statements evaluate a boolean expression. If true, one branch executes. If false, the next condition is checked, all the way to the final <em>else</em> catch-all.</p>
+          <div className="viz-box">
+            <div className="viz-label">if-else Chain — Grade Classifier</div>
+            <ControlFlowViz />
+          </div>
+          <div className="code-block">
+            <span className="kw">int</span> grade = <span className="num">85</span>;{"\n\n"}
+            <span className="kw">if</span> (grade <span className="op">&gt;=</span> <span className="num">90</span>) {"{"}{"\n"}
+            {"    "}<span className="fn">print</span>(<span className="str">"A"</span>);{"\n"}
+            {"}"} <span className="kw">else if</span> (grade <span className="op">&gt;=</span> <span className="num">80</span>) {"{"}{"\n"}
+            {"    "}<span className="fn">print</span>(<span className="str">"B"</span>);  <span className="cm">// ← this runs</span>{"\n"}
+            {"}"} <span className="kw">else</span> {"{"}{"\n"}
+            {"    "}<span className="fn">print</span>(<span className="str">"C or lower"</span>);{"\n"}
+            {"}"}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Loops — Repetition Mechanisms</div>
+          <div className="viz-box">
+            <div className="viz-label">for Loop — Iteration Visualized</div>
+            <LoopViz />
+          </div>
+          <div className="card-grid card-grid-3" style={{ marginTop: 20 }}>
+            {[
+              { name: "for loop", when: "Known iterations", code: "for(i=0; i<n; i++)" },
+              { name: "while loop", when: "Unknown iterations", code: "while(condition) {...}" },
+              { name: "do-while", when: "Execute at least once", code: "do {...} while(cond)" },
+            ].map(l => (
+              <div key={l.name} className="feature-card">
+                <div className="fc-title" style={{ fontFamily: "'DM Mono',monospace", color: "var(--accent2)" }}>{l.name}</div>
+                <div className="fc-desc" style={{ marginBottom: 8 }}>{l.when}</div>
+                <code style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--muted2)" }}>{l.code}</code>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">switch / match Statement</div>
+          <p className="prose">When you need to compare one value against many fixed options, a <em>switch</em> is cleaner and often faster than a chain of if-else.</p>
+          <div className="code-block">
+            <span className="kw">switch</span> (day) {"{"}{"\n"}
+            {"    "}<span className="kw">case</span> <span className="num">1</span>: <span className="fn">print</span>(<span className="str">"Monday"</span>); <span className="kw">break</span>;{"\n"}
+            {"    "}<span className="kw">case</span> <span className="num">2</span>: <span className="fn">print</span>(<span className="str">"Tuesday"</span>); <span className="kw">break</span>;{"\n"}
+            {"    "}<span className="cm">// ... cases 3-6</span>{"\n"}
+            {"    "}<span className="kw">default</span>: <span className="fn">print</span>(<span className="str">"Sunday"</span>);{"\n"}
+            {"}"}
+          </div>
+          <div className="tip-card">
+            <strong>Remember break!</strong> Without <code>break</code>, execution "falls through" to the next case — a common bug. Some languages like Rust don't have fall-through by default.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChPFFunctions() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P4</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part I · Chapter P4</span>
+          <span className="hero-section-badge">Programming Fundamentals</span>
+        </div>
+        <h2>Functions</h2>
+        <p>Functions are reusable blocks of code. They're the primary tool for organizing programs, reducing duplication, and managing complexity.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Call Stack — How Functions Execute</div>
+          <p className="prose">Every function call creates a new <em>stack frame</em> — a private block of memory for that function's local variables. Frames are pushed on call and popped on return.</p>
+          <div className="viz-box">
+            <div className="viz-label">Function Call & Return — Stack Frame Lifecycle</div>
+            <FunctionsViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Anatomy of a Function</div>
+          <div className="code-block">
+            <span className="cm">// Return type  Name    Parameters</span>{"\n"}
+            {"         "}<span className="kw">int</span>    <span className="fn">add</span>   (<span className="kw">int</span> a, <span className="kw">int</span> b) {"{"}{"\n"}
+            {"    "}<span className="cm">// Function body — runs when called</span>{"\n"}
+            {"    "}<span className="kw">int</span> result = a <span className="op">+</span> b;{"\n"}
+            {"    "}<span className="kw">return</span> result;  <span className="cm">// sends value back to caller</span>{"\n"}
+            {"}"}{"\n\n"}
+            <span className="cm">// Calling the function:</span>{"\n"}
+            <span className="kw">int</span> sum = <span className="fn">add</span>(<span className="num">5</span>, <span className="num">3</span>);  <span className="cm">// sum = 8</span>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Parameters: Pass by Value vs Reference</div>
+          <div className="card-grid card-grid-2">
+            <div>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--accent2)", marginBottom: 8 }}>Pass by Value (copy)</div>
+              <div className="code-block" style={{ fontSize: 12 }}>
+                <span className="kw">void</span> <span className="fn">double</span>(<span className="kw">int</span> x) {"{"}{"\n"}
+                {"  "}x = x <span className="op">*</span> <span className="num">2</span>; <span className="cm">// local copy!</span>{"\n"}
+                {"}"}{"\n"}
+                <span className="kw">int</span> n = <span className="num">5</span>;{"\n"}
+                <span className="fn">double</span>(n);{"\n"}
+                <span className="cm">// n is still 5!</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--accent3)", marginBottom: 8 }}>Pass by Reference (pointer)</div>
+              <div className="code-block" style={{ fontSize: 12 }}>
+                <span className="kw">void</span> <span className="fn">double</span>(<span className="kw">int</span>&amp; x) {"{"}{"\n"}
+                {"  "}x = x <span className="op">*</span> <span className="num">2</span>; <span className="cm">// original!</span>{"\n"}
+                {"}"}{"\n"}
+                <span className="kw">int</span> n = <span className="num">5</span>;{"\n"}
+                <span className="fn">double</span>(n);{"\n"}
+                <span className="cm">// n is now 10 ✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Recursion</div>
+          <p className="prose">A function that calls itself is recursive. Every recursive solution needs: a <em>base case</em> (when to stop) and a <em>recursive case</em> (how to reduce the problem).</p>
+          <div className="code-block">
+            <span className="cm">// Factorial: n! = n × (n-1) × ... × 1</span>{"\n"}
+            <span className="kw">int</span> <span className="fn">factorial</span>(<span className="kw">int</span> n) {"{"}{"\n"}
+            {"    "}<span className="kw">if</span> (n <span className="op">&lt;=</span> <span className="num">1</span>) <span className="kw">return</span> <span className="num">1</span>;     <span className="cm">// BASE CASE</span>{"\n"}
+            {"    "}<span className="kw">return</span> n <span className="op">*</span> <span className="fn">factorial</span>(n <span className="op">-</span> <span className="num">1</span>);  <span className="cm">// RECURSIVE CASE</span>{"\n"}
+            {"}"}{"\n\n"}
+            <span className="cm">// factorial(4):</span>{"\n"}
+            <span className="cm">// → 4 * factorial(3)</span>{"\n"}
+            <span className="cm">// → 4 * 3 * factorial(2)</span>{"\n"}
+            <span className="cm">// → 4 * 3 * 2 * factorial(1)</span>{"\n"}
+            <span className="cm">// → 4 * 3 * 2 * 1 = 24</span>
+          </div>
+          <div className="tip-card">
+            <strong>Watch out:</strong> Recursion without a proper base case causes a stack overflow — the call stack grows until memory runs out. Always define your termination condition first.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChOOPClasses() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P5</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part II · Chapter P5</span>
+          <span className="hero-section-badge">Object-Oriented Programming</span>
+        </div>
+        <h2>Classes &amp; Objects</h2>
+        <p>OOP models the world as interacting objects — each with its own data (fields) and behaviors (methods). The class is the blueprint; the object is the instance.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Blueprint → Instance Visualization</div>
+          <p className="prose">A <em>class</em> defines the structure. An <em>object</em> is a specific instance of that class, allocated in memory, with its own copy of every field.</p>
+          <div className="viz-box">
+            <div className="viz-label">Class Definition → Object Instantiation</div>
+            <OOPClassViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Constructors</div>
+          <p className="prose">A <em>constructor</em> is a special method called when an object is created. It initializes fields to valid starting values.</p>
+          <div className="code-block">
+            <span className="kw">class</span> <span className="cls">Dog</span> {"{"}{"\n"}
+            {"    "}<span className="cm">// Fields (instance variables)</span>{"\n"}
+            {"    "}<span className="kw">private</span> <span className="cls">String</span> name;{"\n"}
+            {"    "}<span className="kw">private</span> <span className="kw">int</span> age;{"\n\n"}
+            {"    "}<span className="cm">// Constructor — same name as class, no return type</span>{"\n"}
+            {"    "}<span className="kw">public</span> <span className="fn">Dog</span>(<span className="cls">String</span> name, <span className="kw">int</span> age) {"{"}{"\n"}
+            {"        "}<span className="kw">this</span>.name = name;  <span className="cm">// 'this' = current object</span>{"\n"}
+            {"        "}<span className="kw">this</span>.age = age;{"\n"}
+            {"    "}{"}"}{"\n\n"}
+            {"    "}<span className="cm">// Method</span>{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">bark</span>() {"{"}{"\n"}
+            {"        "}System.out.<span className="fn">println</span>(name <span className="op">+</span> <span className="str">" says: Woof!"</span>);{"\n"}
+            {"    "}{"}"}{"\n"}
+            {"}"}{"\n\n"}
+            <span className="cm">// Usage:</span>{"\n"}
+            <span className="cls">Dog</span> rex = <span className="kw">new</span> <span className="fn">Dog</span>(<span className="str">"Rex"</span>, <span className="num">3</span>);{"\n"}
+            rex.<span className="fn">bark</span>();  <span className="cm">// Rex says: Woof!</span>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">The Four Pillars of OOP</div>
+          <div className="card-grid card-grid-2">
+            {[
+              { name: "Encapsulation", icon: "🔒", desc: "Hiding internal details. Expose only what's needed through a controlled interface.", color: "#e8a87c" },
+              { name: "Inheritance", icon: "🌳", desc: "Child classes inherit fields and methods from parents. Reuse without duplication.", color: "#7cbbe8" },
+              { name: "Polymorphism", icon: "🎭", desc: "Same interface, different behaviors. One method name, many implementations.", color: "#a87ce8" },
+              { name: "Abstraction", icon: "🎨", desc: "Hide complexity behind simple interfaces. Users don't need to know the internals.", color: "#7ce8b4" },
+            ].map(p => (
+              <div key={p.name} style={{ background: `${p.color}08`, border: `1px solid ${p.color}30`, borderRadius: 10, padding: 18 }}>
+                <div style={{ fontSize: 22, marginBottom: 8 }}>{p.icon}</div>
+                <div style={{ fontFamily: "'DM Mono',monospace", fontWeight: 700, color: p.color, marginBottom: 6, fontSize: 13 }}>{p.name}</div>
+                <div style={{ fontSize: 13, color: "var(--muted2)", lineHeight: 1.65 }}>{p.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChOOPEncapsulation() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P6</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part II · Chapter P6</span>
+          <span className="hero-section-badge">Object-Oriented Programming</span>
+        </div>
+        <h2>Encapsulation</h2>
+        <p>Protect your data. Control access through getters and setters. Prevent invalid states from ever entering your objects.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Why Encapsulation Matters</div>
+          <p className="prose">Without encapsulation, any code anywhere in the codebase can corrupt your object's state. With it, all modifications go through validated methods — the object always remains in a <em>valid state</em>.</p>
+          <div className="viz-box">
+            <div className="viz-label">BankAccount — Public vs. Encapsulated</div>
+            <EncapsulationViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Access Modifiers</div>
+          <table className="tbl">
+            <thead><tr><th>Modifier</th><th>Same Class</th><th>Same Package</th><th>Subclass</th><th>Everywhere</th></tr></thead>
+            <tbody>
+              <tr><td><span className="badge br">private</span></td><td>✓</td><td>✗</td><td>✗</td><td>✗</td></tr>
+              <tr><td><span className="badge bb">protected</span></td><td>✓</td><td>✓</td><td>✓</td><td>✗</td></tr>
+              <tr><td><span className="badge by">(package)</span></td><td>✓</td><td>✓</td><td>✗</td><td>✗</td></tr>
+              <tr><td><span className="badge bg">public</span></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+            </tbody>
+          </table>
+          <div className="tip-card">
+            <strong>Rule of thumb:</strong> Start with <code>private</code> for everything. Open up access only when you explicitly decide it's needed. This is called the Principle of Least Privilege.
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Full Encapsulated Class Example</div>
+          <div className="code-block">
+            <span className="kw">class</span> <span className="cls">BankAccount</span> {"{"}{"\n"}
+            {"    "}<span className="kw">private double</span> balance;      <span className="cm">// 🔒 hidden</span>{"\n"}
+            {"    "}<span className="kw">private</span> <span className="cls">String</span> owner;{"\n\n"}
+            {"    "}<span className="kw">public</span> <span className="fn">BankAccount</span>(<span className="cls">String</span> owner, <span className="kw">double</span> initial) {"{"}{"\n"}
+            {"        "}<span className="kw">if</span> (initial <span className="op">&lt;</span> <span className="num">0</span>) <span className="kw">throw new</span> <span className="cls">IllegalArgumentException</span>();{"\n"}
+            {"        "}<span className="kw">this</span>.owner = owner;{"\n"}
+            {"        "}<span className="kw">this</span>.balance = initial;{"\n"}
+            {"    "}{"}"}{"\n\n"}
+            {"    "}<span className="cm">// Getter — read-only access</span>{"\n"}
+            {"    "}<span className="kw">public double</span> <span className="fn">getBalance</span>() {"{"} <span className="kw">return</span> balance; {"}"}{"\n\n"}
+            {"    "}<span className="cm">// Setter with VALIDATION</span>{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">deposit</span>(<span className="kw">double</span> amount) {"{"}{"\n"}
+            {"        "}<span className="kw">if</span> (amount <span className="op">&lt;=</span> <span className="num">0</span>) <span className="kw">throw new</span> <span className="cls">IllegalArgumentException</span>(<span className="str">"Must be positive"</span>);{"\n"}
+            {"        "}balance <span className="op">+=</span> amount;{"\n"}
+            {"    "}{"}"}{"\n"}
+            {"}"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChOOPInheritance() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P7</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part II · Chapter P7</span>
+          <span className="hero-section-badge">Object-Oriented Programming</span>
+        </div>
+        <h2>Inheritance</h2>
+        <p>Build on existing code. Child classes inherit all the capabilities of their parent and add their own unique behaviors.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">The Inheritance Hierarchy</div>
+          <p className="prose">Inheritance creates an <em>is-a</em> relationship. A Dog IS-A Animal. A Cat IS-A Animal. They share animal behaviors but each adds their own.</p>
+          <div className="viz-box">
+            <div className="viz-label">Class Hierarchy — Animal → Dog / Cat</div>
+            <InheritanceViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">extends &amp; super</div>
+          <div className="code-block">
+            <span className="kw">class</span> <span className="cls">Animal</span> {"{"}{"\n"}
+            {"    "}<span className="kw">protected</span> <span className="cls">String</span> name;{"\n"}
+            {"    "}<span className="kw">public</span> <span className="fn">Animal</span>(<span className="cls">String</span> name) {"{"} <span className="kw">this</span>.name = name; {"}"}{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">eat</span>() {"{"} <span className="fn">print</span>(name <span className="op">+</span> <span className="str">" is eating"</span>); {"}"}{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">makeSound</span>() {"{"} <span className="fn">print</span>(<span className="str">"..."</span>); {"}"}{"\n"}
+            {"}"}{"\n\n"}
+            <span className="kw">class</span> <span className="cls">Dog</span> <span className="kw">extends</span> <span className="cls">Animal</span> {" {"}{"\n"}
+            {"    "}<span className="kw">public</span> <span className="fn">Dog</span>(<span className="cls">String</span> name) {"{"}{"\n"}
+            {"        "}<span className="kw">super</span>(name); <span className="cm">// call parent constructor</span>{"\n"}
+            {"    "}{"}"}{"\n"}
+            {"    "}<span className="op">@Override</span>{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">makeSound</span>() {"{"} <span className="fn">print</span>(<span className="str">"Woof!"</span>); {"}"} <span className="cm">// override</span>{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">fetch</span>() {"{"} <span className="fn">print</span>(<span className="str">"Fetching!"</span>); {"}"} <span className="cm">// new method</span>{"\n"}
+            {"}"}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Inheritance vs. Composition</div>
+          <div className="info-card">
+            <strong>Prefer Composition over Inheritance</strong> — a famous principle. Instead of Dog extending Animal, a Dog could HAVE-A behavior set. This avoids the fragile base class problem and deep inheritance chains that become hard to maintain.
+            <br /><br />
+            <strong>Use inheritance for:</strong> true is-a relationships, shared interface contracts.<br />
+            <strong>Use composition for:</strong> flexible, reusable behaviors that don't fit strict hierarchies.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChOOPPolymorphism() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P8</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part II · Chapter P8</span>
+          <span className="hero-section-badge">Object-Oriented Programming</span>
+        </div>
+        <h2>Polymorphism</h2>
+        <p>"Many forms." The same method call produces different behavior depending on the actual runtime type of the object.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Runtime Polymorphism in Action</div>
+          <p className="prose">Because Dog, Cat, and Duck all extend Animal, you can store them in an <code>Animal[]</code> array and call the same method on each. The correct version runs automatically — this is called <em>dynamic dispatch</em>.</p>
+          <div className="viz-box">
+            <div className="viz-label">makeSound() — Same Call, Four Behaviors</div>
+            <PolymorphismViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Method Overriding vs. Overloading</div>
+          <div className="card-grid card-grid-2">
+            <div>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--accent)", marginBottom: 8 }}>Overriding (Runtime)</div>
+              <div className="code-block" style={{ fontSize: 12 }}>
+                <span className="cm">// Same signature, different class</span>{"\n"}
+                <span className="kw">class</span> <span className="cls">Animal</span>: <span className="fn">makeSound</span>() → "..."{"\n"}
+                <span className="kw">class</span> <span className="cls">Dog</span>: <span className="fn">makeSound</span>() → "Woof!"{"\n"}
+                <span className="kw">class</span> <span className="cls">Cat</span>: <span className="fn">makeSound</span>() → "Meow!"{"\n"}
+                <span className="cm">// Runtime decides which runs</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: "var(--accent3)", marginBottom: 8 }}>Overloading (Compile-time)</div>
+              <div className="code-block" style={{ fontSize: 12 }}>
+                <span className="cm">// Same name, different params</span>{"\n"}
+                <span className="kw">int</span> <span className="fn">add</span>(<span className="kw">int</span> a, <span className="kw">int</span> b){"\n"}
+                <span className="kw">double</span> <span className="fn">add</span>(<span className="kw">double</span> a, <span className="kw">double</span> b){"\n"}
+                <span className="kw">int</span> <span className="fn">add</span>(<span className="kw">int</span> a, <span className="kw">int</span> b, <span className="kw">int</span> c){"\n"}
+                <span className="cm">// Compiler picks based on args</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Interfaces — Pure Polymorphism Contracts</div>
+          <p className="prose">An <em>interface</em> is a pure contract — no implementation, just method signatures. Any class that implements the interface must provide the bodies.</p>
+          <div className="code-block">
+            <span className="cm">// Interface: what to do, not how</span>{"\n"}
+            <span className="kw">interface</span> <span className="cls">Drawable</span> {"{"}{"\n"}
+            {"    "}<span className="kw">void</span> <span className="fn">draw</span>();      <span className="cm">// no body</span>{"\n"}
+            {"    "}<span className="kw">void</span> <span className="fn">resize</span>(<span className="kw">double</span> factor);{"\n"}
+            {"}"}{"\n\n"}
+            <span className="kw">class</span> <span className="cls">Circle</span> <span className="kw">implements</span> <span className="cls">Drawable</span> {"{"}{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">draw</span>() {"{"} <span className="fn">print</span>(<span className="str">"Drawing ○"</span>); {"}"}{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">resize</span>(<span className="kw">double</span> f) {"{"} radius <span className="op">*=</span> f; {"}"}{"\n"}
+            {"}"}{"\n\n"}
+            <span className="cm">// Now any Drawable can be drawn the same way:</span>{"\n"}
+            <span className="cls">Drawable</span>[] shapes = {"{"}circle, square, triangle{"}"};{"\n"}
+            <span className="kw">for</span> (<span className="cls">Drawable</span> s : shapes) s.<span className="fn">draw</span>(); <span className="cm">// polymorphism!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChOOPAbstraction() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">P9</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part II · Chapter P9</span>
+          <span className="hero-section-badge">Object-Oriented Programming</span>
+        </div>
+        <h2>Abstraction</h2>
+        <p>Show only what matters. Hide the complexity. Give users simple controls for complicated machinery.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Layers of Abstraction</div>
+          <p className="prose">Good software is built in layers. Each layer exposes a simple interface to the layer above and hides its implementation details. You use <code>car.drive()</code> without knowing anything about combustion engines.</p>
+          <div className="viz-box">
+            <div className="viz-label">Abstraction Layers — From User to Hardware</div>
+            <AbstractionViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Abstract Classes vs Interfaces</div>
+          <table className="tbl">
+            <thead><tr><th>Feature</th><th>Abstract Class</th><th>Interface</th></tr></thead>
+            <tbody>
+              <tr><td>Can have implementation</td><td>✓ Yes</td><td>✗ (default methods only in Java 8+)</td></tr>
+              <tr><td>Can have fields</td><td>✓ Yes</td><td>✗ (constants only)</td></tr>
+              <tr><td>Multiple inheritance</td><td>✗ One parent only</td><td>✓ Implement many</td></tr>
+              <tr><td>Constructor</td><td>✓ Yes</td><td>✗ No</td></tr>
+              <tr><td>Use when...</td><td>Sharing code + contract</td><td>Pure contract, no code sharing</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-title">Abstract Class Example</div>
+          <div className="code-block">
+            <span className="kw">abstract class</span> <span className="cls">Shape</span> {"{"}{"\n"}
+            {"    "}<span className="cm">// Concrete: implemented here</span>{"\n"}
+            {"    "}<span className="kw">public void</span> <span className="fn">printInfo</span>() {"{"}{"\n"}
+            {"        "}<span className="fn">print</span>(<span className="str">"Area: "</span> <span className="op">+</span> <span className="fn">getArea</span>());{"\n"}
+            {"    "}{"}"}{"\n\n"}
+            {"    "}<span className="cm">// Abstract: subclasses MUST implement</span>{"\n"}
+            {"    "}<span className="kw">public abstract double</span> <span className="fn">getArea</span>();{"\n"}
+            {"}"}{"\n\n"}
+            <span className="kw">class</span> <span className="cls">Circle</span> <span className="kw">extends</span> <span className="cls">Shape</span> {"{"}{"\n"}
+            {"    "}<span className="kw">double</span> radius;{"\n"}
+            {"    "}<span className="op">@Override</span>{"\n"}
+            {"    "}<span className="kw">public double</span> <span className="fn">getArea</span>() {"{"} <span className="kw">return</span> Math.PI <span className="op">*</span> radius <span className="op">*</span> radius; {"}"}{"\n"}
+            {"}"}
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">SOLID Principles — The OOP Rulebook</div>
+          <div className="card-grid card-grid-2">
+            {[
+              { letter: "S", name: "Single Responsibility", desc: "A class should have ONE reason to change. Don't mix concerns.", color: "#7ce8b4" },
+              { letter: "O", name: "Open/Closed", desc: "Open for extension, closed for modification. Add new behavior via inheritance, not editing old code.", color: "#e8a87c" },
+              { letter: "L", name: "Liskov Substitution", desc: "Subclasses must be usable wherever their parent is used without breaking behavior.", color: "#7cbbe8" },
+              { letter: "I", name: "Interface Segregation", desc: "Many specific interfaces are better than one fat general interface.", color: "#a87ce8" },
+              { letter: "D", name: "Dependency Inversion", desc: "Depend on abstractions, not concretions. High-level modules shouldn't depend on low-level details.", color: "#e87ca8" },
+            ].map(p => (
+              <div key={p.letter} style={{ background: `${p.color}08`, border: `1px solid ${p.color}30`, borderRadius: 10, padding: 16, display: "flex", gap: 14 }}>
+                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 900, color: p.color, lineHeight: 1, flexShrink: 0 }}>{p.letter}</div>
+                <div>
+                  <div style={{ fontWeight: 700, color: "var(--text)", fontSize: 13, marginBottom: 4 }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted2)", lineHeight: 1.65 }}>{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- DATA STRUCTURES (condensed from v1.0) ----
+function ChDSIntro() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">D0</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part III · Chapter D0</span>
+          <span className="hero-section-badge">Data Structures</span>
+        </div>
+        <h2>Introduction to Data Structures</h2>
+        <p>How data is organized changes everything. The right structure turns an hour-long computation into milliseconds.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">What is a Data Structure?</div>
+          <p className="prose">A <strong>data structure</strong> is a particular way of organizing and storing data so it can be accessed and modified efficiently. Just as a library organizes books with a cataloging system, programs organize data to enable fast operations.</p>
+          <div className="info-card">
+            <strong>The core trade-off:</strong> Every data structure trades time complexity (operation speed), space complexity (memory used), and implementation simplicity. There's no single "best" — only the best for your use case.
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Big-O Notation</div>
+          <p className="prose">Big-O describes how runtime grows as input size n grows. It ignores constants and lower-order terms — only the dominant growth factor matters.</p>
+          <table className="tbl">
+            <thead><tr><th>Notation</th><th>Name</th><th>Example</th><th>n=1M ops</th></tr></thead>
+            <tbody>
+              <tr><td><span className="badge bg">O(1)</span></td><td>Constant</td><td>Hash table lookup</td><td>1</td></tr>
+              <tr><td><span className="badge bg">O(log n)</span></td><td>Logarithmic</td><td>Binary search</td><td>20</td></tr>
+              <tr><td><span className="badge by">O(n)</span></td><td>Linear</td><td>Array scan</td><td>1,000,000</td></tr>
+              <tr><td><span className="badge by">O(n log n)</span></td><td>Linearithmic</td><td>Merge sort</td><td>20,000,000</td></tr>
+              <tr><td><span className="badge br">O(n²)</span></td><td>Quadratic</td><td>Bubble sort</td><td>1,000,000,000,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-title">Quick Reference: All Structures</div>
+          <table className="tbl">
+            <thead><tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Best For</th></tr></thead>
+            <tbody>
+              <tr><td>Array</td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td>Index-based access</td></tr>
+              <tr><td>Hash Table</td><td><span className="badge bg">O(1)</span></td><td><span className="badge bg">O(1)</span></td><td><span className="badge bg">O(1)</span></td><td>Key lookups</td></tr>
+              <tr><td>BST (balanced)</td><td><span className="badge bg">O(log n)</span></td><td><span className="badge bg">O(log n)</span></td><td><span className="badge bg">O(log n)</span></td><td>Sorted data</td></tr>
+              <tr><td>Linked List</td><td>O(n)</td><td><span className="badge bg">O(1)</span></td><td><span className="badge bg">O(1)*</span></td><td>Frequent insert/delete</td></tr>
+              <tr><td>Stack / Queue</td><td>O(n)</td><td><span className="badge bg">O(1)</span></td><td><span className="badge bg">O(1)</span></td><td>LIFO/FIFO access</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChDSArrays() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">D1</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part III · Chapter D1</span>
+          <span className="hero-section-badge">Data Structures</span>
+        </div>
+        <h2>Arrays</h2>
+        <p>Contiguous memory, O(1) access by index — the foundation of nearly every other data structure.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Memory Layout & Operations</div>
+          <p className="prose">Array elements are stored in <strong>contiguous memory</strong>. Access any element in O(1) via: <em>address = base + index × element_size</em>.</p>
+          <div className="viz-box">
+            <div className="viz-label">Array Memory — Access, Update & Insert</div>
+            <ArrayViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Complexity Summary</div>
+          <table className="tbl">
+            <thead><tr><th>Operation</th><th>Time</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Access by index</td><td><span className="badge bg">O(1)</span></td><td>Arithmetic calculation</td></tr>
+              <tr><td>Search (unsorted)</td><td><span className="badge by">O(n)</span></td><td>Linear scan</td></tr>
+              <tr><td>Search (sorted binary)</td><td><span className="badge bg">O(log n)</span></td><td>Requires sorted order</td></tr>
+              <tr><td>Insert/Delete at end</td><td><span className="badge bg">O(1)*</span></td><td>Amortized for dynamic</td></tr>
+              <tr><td>Insert/Delete middle</td><td><span className="badge by">O(n)</span></td><td>Shift elements</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChDSStack() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">D2</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part III · Chapter D2</span>
+          <span className="hero-section-badge">Data Structures</span>
+        </div>
+        <h2>Stacks &amp; Queues</h2>
+        <p>Two abstract data types that restrict how you access data — enabling LIFO and FIFO patterns with O(1) operations.</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">Stack — LIFO (Last In, First Out)</div>
+          <p className="prose">Think: a stack of plates. You can only add to or remove from the top. Used for undo systems, call stacks, bracket matching, and DFS.</p>
+          <div className="viz-box">
+            <div className="viz-label">Stack — Push, Pop & Peek</div>
+            <StackViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Queue — FIFO (First In, First Out)</div>
+          <p className="prose">Think: a line at a coffee shop. Add at the rear, remove from the front. Used for BFS, task scheduling, print spoolers, and message queues.</p>
+          <div className="code-block">
+            <span className="cm">// Queue using two stacks (classic interview problem)</span>{"\n"}
+            <span className="kw">class</span> <span className="cls">Queue</span> {"{"}{"\n"}
+            {"    "}<span className="kw">private</span> inbox = [], outbox = [];{"\n\n"}
+            {"    "}<span className="fn">enqueue</span>(val) {"{"} inbox.push(val); {"}"} <span className="cm">// O(1)</span>{"\n\n"}
+            {"    "}<span className="fn">dequeue</span>() {"{"}{"\n"}
+            {"        "}<span className="kw">if</span> (!outbox.length){"\n"}
+            {"            "}<span className="kw">while</span> (inbox.length) outbox.push(inbox.pop());{"\n"}
+            {"        "}<span className="kw">return</span> outbox.pop(); <span className="cm">// O(1) amortized</span>{"\n"}
+            {"    "}{"}"}{"\n"}
+            {"}"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChDSBST() {
+  return (
+    <div>
+      <div className="chapter-hero">
+        <div className="hero-big-num">D3</div>
+        <div className="hero-eyebrow">
+          <span className="hero-chapter-num">Part III · Chapter D3</span>
+          <span className="hero-section-badge">Data Structures</span>
+        </div>
+        <h2>Binary Search Trees &amp; Sorting</h2>
+        <p>Hierarchical structures enabling O(log n) operations, plus a survey of sorting algorithms from O(n²) to O(n log n).</p>
+      </div>
+      <div className="chapter-body">
+        <div className="section">
+          <div className="section-title">BST: Build, Search & Traverse</div>
+          <p className="prose">BST invariant: left subtree values &lt; node &lt; right subtree values. This enables binary search at every node — eliminating half the remaining elements each step.</p>
+          <div className="viz-box">
+            <div className="viz-label">BST Construction & In-Order Traversal</div>
+            <BSTViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Sorting Algorithms — Animated</div>
+          <p className="prose">Sorting is a fundamental operation. Understanding the trade-offs between algorithms is essential for choosing the right one.</p>
+          <div className="viz-box">
+            <div className="viz-label">Bubble Sort — Live Step Animation</div>
+            <SortingViz />
+          </div>
+        </div>
+        <div className="section">
+          <div className="section-title">Algorithm Comparison</div>
+          <table className="tbl">
+            <thead><tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Stable</th></tr></thead>
+            <tbody>
+              <tr><td>Bubble Sort</td><td>O(n)</td><td><span className="badge br">O(n²)</span></td><td><span className="badge br">O(n²)</span></td><td>✓</td></tr>
+              <tr><td>Merge Sort</td><td colSpan={3} style={{ textAlign: "center" }}><span className="badge bg">O(n log n)</span></td><td>✓</td></tr>
+              <tr><td>Quick Sort</td><td>O(n log n)</td><td><span className="badge bg">O(n log n)</span></td><td><span className="badge br">O(n²)</span></td><td>✗</td></tr>
+              <tr><td>Heap Sort</td><td colSpan={3} style={{ textAlign: "center" }}><span className="badge bg">O(n log n)</span></td><td>✗</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// NAV CONFIG
+// ============================================================
+const allChapters = [
+  { id: "pf0", label: "What is Programming?", num: "P0", group: "Part I — Fundamentals", component: ChPFIntro },
+  { id: "pf1", label: "Variables & Data Types", num: "P1", group: "Part I — Fundamentals", component: ChPFVariables },
+  { id: "pf2", label: "Operators & Expressions", num: "P2", group: "Part I — Fundamentals", component: ChPFOperators },
+  { id: "pf3", label: "Control Flow", num: "P3", group: "Part I — Fundamentals", component: ChPFControlFlow },
+  { id: "pf4", label: "Functions", num: "P4", group: "Part I — Fundamentals", component: ChPFFunctions },
+  { id: "oop5", label: "Classes & Objects", num: "P5", group: "Part II — OOP", component: ChOOPClasses },
+  { id: "oop6", label: "Encapsulation", num: "P6", group: "Part II — OOP", component: ChOOPEncapsulation },
+  { id: "oop7", label: "Inheritance", num: "P7", group: "Part II — OOP", component: ChOOPInheritance },
+  { id: "oop8", label: "Polymorphism", num: "P8", group: "Part II — OOP", component: ChOOPPolymorphism },
+  { id: "oop9", label: "Abstraction & SOLID", num: "P9", group: "Part II — OOP", component: ChOOPAbstraction },
+  { id: "ds0", label: "Intro to Data Structures", num: "D0", group: "Part III — Data Structures", component: ChDSIntro },
+  { id: "ds1", label: "Arrays", num: "D1", group: "Part III — Data Structures", component: ChDSArrays },
+  { id: "ds2", label: "Stacks & Queues", num: "D2", group: "Part III — Data Structures", component: ChDSStack },
+  { id: "ds3", label: "BSTs & Sorting", num: "D3", group: "Part III — Data Structures", component: ChDSBST },
+];
+
+const groups = [...new Set(allChapters.map(c => c.group))];
+
+// ============================================================
+// APP
+// ============================================================
+function App() {
+  const [active, setActive] = useState("pf0");
+  const mainRef = useRef(null);
+
+  const idx = allChapters.findIndex(c => c.id === active);
+  const ActiveChapter = allChapters[idx].component;
+  const progress = Math.round(((idx + 1) / allChapters.length) * 100);
+
+  const navigate = (id) => {
+    setActive(id);
+    if (mainRef.current) mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <>
+      <style>{globalStyles}</style>
+      <div className="book-wrap">
+        {/* SIDEBAR */}
+        <nav className="sidebar">
+          <div className="sidebar-header">
+            <div className="sidebar-version">v1.01</div>
+            <div className="sidebar-title">The Complete<br />Coding Book</div>
+            <div className="sidebar-subtitle">Fundamentals → OOP → Data Structures</div>
+          </div>
+          <div className="sidebar-progress">
+            <span>Progress: {progress}% · Chapter {idx + 1}/{allChapters.length}</span>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          {groups.map(g => (
+            <div className="nav-section" key={g}>
+              <div className="nav-section-label">{g}</div>
+              {allChapters.filter(c => c.group === g).map(ch => (
+                <div key={ch.id} className={`nav-item ${active === ch.id ? "active" : ""}`}
+                  onClick={() => navigate(ch.id)}>
+                  <span className="ch-num">{ch.num}</span>
+                  {ch.label}
+                </div>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        {/* MAIN */}
+        <main className="main" ref={mainRef}>
+          <ActiveChapter />
+          <div className="bottom-nav">
+            {idx > 0 ? (
+              <button className="btn" onClick={() => navigate(allChapters[idx - 1].id)}>
+                ← {allChapters[idx - 1].label}
+              </button>
+            ) : <div />}
+            {idx < allChapters.length - 1 && (
+              <button className="btn btn-primary" onClick={() => navigate(allChapters[idx + 1].id)}>
+                {allChapters[idx + 1].label} →
+              </button>
+            )}
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
